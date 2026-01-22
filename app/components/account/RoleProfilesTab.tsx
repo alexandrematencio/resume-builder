@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { Pencil, Trash2, Star } from 'lucide-react';
 import { useProfile } from '@/app/contexts/ProfileContext';
-import type { RoleProfile, Skill } from '@/app/types';
+import type { RoleProfile } from '@/app/types';
 
 interface RoleFormData {
   name: string;
@@ -177,26 +178,26 @@ export default function RoleProfilesTab() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-white mb-2">Profils de rôle</h2>
-          <p className="text-slate-400 text-sm">
-            Créez des profils personnalisés pour différents types de postes.
+          <h2 className="text-xl font-semibold text-primary-900 dark:text-primary-50 mb-2">Role Profiles</h2>
+          <p className="text-primary-600 dark:text-primary-400 text-sm">
+            Create customized profiles for different types of positions.
           </p>
         </div>
         <div className="flex items-center gap-4">
           {saveStatus === 'saving' && (
-            <span className="text-yellow-400 text-sm flex items-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-yellow-400"></div>
+            <span className="text-warning-600 dark:text-warning-400 text-sm flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-warning-500"></div>
             </span>
           )}
           {saveStatus === 'saved' && (
-            <span className="text-green-400 text-sm">Enregistré</span>
+            <span className="text-success-600 dark:text-success-400 text-sm">Saved</span>
           )}
           {!isAdding && (
             <button
               onClick={handleAdd}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+              className="btn-primary text-sm"
             >
-              + Nouveau profil
+              + New Profile
             </button>
           )}
         </div>
@@ -204,36 +205,36 @@ export default function RoleProfilesTab() {
 
       {/* Add/Edit Form */}
       {isAdding && (
-        <div className="bg-slate-700/30 rounded-xl p-6 mb-6 border border-slate-600/50">
-          <h3 className="text-lg font-semibold text-white mb-4">
-            {editingId ? 'Modifier le profil' : 'Nouveau profil de rôle'}
+        <div className="bg-primary-50 dark:bg-primary-700/30 rounded-xl p-6 mb-6 border border-primary-200 dark:border-primary-600">
+          <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-4">
+            {editingId ? 'Edit Profile' : 'New Role Profile'}
           </h3>
 
           {/* Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Nom du profil <span className="text-red-400">*</span>
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                Profile Name <span className="text-error-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Ex: UX Designer, Développeur Full Stack..."
+                className="input-primary"
+                placeholder="Ex: UX Designer, Full Stack Developer..."
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
                 Description
               </label>
               <input
                 type="text"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Brève description de ce profil"
+                className="input-primary"
+                placeholder="Brief description of this profile"
               />
             </div>
           </div>
@@ -241,8 +242,8 @@ export default function RoleProfilesTab() {
           {/* Icon & Color */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Icône
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                Icon
               </label>
               <div className="flex flex-wrap gap-2">
                 {iconOptions.map((icon) => (
@@ -252,8 +253,8 @@ export default function RoleProfilesTab() {
                     onClick={() => setFormData({ ...formData, icon })}
                     className={`w-10 h-10 text-xl rounded-lg border transition-colors ${
                       formData.icon === icon
-                        ? 'border-blue-500 bg-blue-500/20'
-                        : 'border-slate-600 bg-slate-700/50 hover:border-slate-500'
+                        ? 'border-accent-500 bg-accent-50 dark:bg-accent-500/20'
+                        : 'border-primary-300 dark:border-primary-600 bg-white dark:bg-primary-700/50 hover:border-primary-400 dark:hover:border-primary-500'
                     }`}
                   >
                     {icon}
@@ -263,8 +264,8 @@ export default function RoleProfilesTab() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Couleur
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                Color
               </label>
               <div className="flex flex-wrap gap-2">
                 {colorOptions.map((color) => (
@@ -274,7 +275,7 @@ export default function RoleProfilesTab() {
                     onClick={() => setFormData({ ...formData, color })}
                     className={`w-10 h-10 rounded-lg border-2 transition-all ${
                       formData.color === color
-                        ? 'border-white scale-110'
+                        ? 'border-primary-900 dark:border-white scale-110'
                         : 'border-transparent hover:scale-105'
                     }`}
                     style={{ backgroundColor: color }}
@@ -286,41 +287,41 @@ export default function RoleProfilesTab() {
 
           {/* Custom Summary */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Résumé personnalisé (optionnel)
+            <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+              Custom Summary (optional)
             </label>
             <textarea
               value={formData.customSummary}
               onChange={(e) => setFormData({ ...formData, customSummary: e.target.value })}
               rows={3}
-              className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              placeholder="Laissez vide pour utiliser votre résumé général, ou écrivez un résumé spécifique pour ce type de poste..."
+              className="textarea-primary resize-none"
+              placeholder="Leave empty to use your general summary, or write a specific summary for this type of position..."
             />
           </div>
 
           {/* Experience Selection */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Expériences à inclure
+            <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+              Experiences to Include
             </label>
             {experiences.length === 0 ? (
-              <p className="text-slate-500 text-sm">Aucune expérience dans votre profil</p>
+              <p className="text-primary-500 dark:text-primary-500 text-sm">No experience in your profile</p>
             ) : (
               <div className="space-y-2">
                 {experiences.map((exp) => (
                   <label
                     key={exp.id}
-                    className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-lg cursor-pointer hover:bg-slate-700/50 transition-colors"
+                    className="flex items-center gap-3 p-3 bg-white dark:bg-primary-700/30 rounded-lg cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-700/50 transition-colors border border-primary-200 dark:border-primary-600"
                   >
                     <input
                       type="checkbox"
                       checked={formData.selectedExperienceIds.includes(exp.id)}
                       onChange={() => toggleExperience(exp.id)}
-                      className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 rounded border-primary-300 dark:border-primary-600 bg-white dark:bg-primary-800 text-accent-600 focus:ring-accent-500"
                     />
                     <div>
-                      <p className="text-white font-medium">{exp.title}</p>
-                      <p className="text-slate-400 text-sm">{exp.company}</p>
+                      <p className="text-primary-900 dark:text-primary-50 font-medium">{exp.title}</p>
+                      <p className="text-primary-600 dark:text-primary-400 text-sm">{exp.company}</p>
                     </div>
                   </label>
                 ))}
@@ -330,11 +331,11 @@ export default function RoleProfilesTab() {
 
           {/* Skills Selection */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Compétences à mettre en avant
+            <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+              Skills to Highlight
             </label>
             {skills.length === 0 ? (
-              <p className="text-slate-500 text-sm">Aucune compétence dans votre profil</p>
+              <p className="text-primary-500 dark:text-primary-500 text-sm">No skills in your profile</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {skills.map((skill) => (
@@ -344,8 +345,8 @@ export default function RoleProfilesTab() {
                     onClick={() => toggleSkill(skill.id)}
                     className={`px-3 py-1 rounded-full text-sm transition-colors ${
                       formData.selectedSkillIds.includes(skill.id)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-slate-700/50 text-slate-400 hover:text-white'
+                        ? 'bg-accent-600 text-white'
+                        : 'bg-primary-100 dark:bg-primary-700/50 text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-100'
                     }`}
                   >
                     {skill.name}
@@ -357,27 +358,27 @@ export default function RoleProfilesTab() {
 
           {/* Education Selection */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Formations à inclure
+            <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+              Education to Include
             </label>
             {educations.length === 0 ? (
-              <p className="text-slate-500 text-sm">Aucune formation dans votre profil</p>
+              <p className="text-primary-500 dark:text-primary-500 text-sm">No education in your profile</p>
             ) : (
               <div className="space-y-2">
                 {educations.map((edu) => (
                   <label
                     key={edu.id}
-                    className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-lg cursor-pointer hover:bg-slate-700/50 transition-colors"
+                    className="flex items-center gap-3 p-3 bg-white dark:bg-primary-700/30 rounded-lg cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-700/50 transition-colors border border-primary-200 dark:border-primary-600"
                   >
                     <input
                       type="checkbox"
                       checked={formData.selectedEducationIds.includes(edu.id)}
                       onChange={() => toggleEducation(edu.id)}
-                      className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 rounded border-primary-300 dark:border-primary-600 bg-white dark:bg-primary-800 text-accent-600 focus:ring-accent-500"
                     />
                     <div>
-                      <p className="text-white font-medium">{edu.degree}</p>
-                      <p className="text-slate-400 text-sm">{edu.institution}</p>
+                      <p className="text-primary-900 dark:text-primary-50 font-medium">{edu.degree}</p>
+                      <p className="text-primary-600 dark:text-primary-400 text-sm">{edu.institution}</p>
                     </div>
                   </label>
                 ))}
@@ -389,16 +390,16 @@ export default function RoleProfilesTab() {
           <div className="flex justify-end gap-3">
             <button
               onClick={handleCancel}
-              className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+              className="btn-ghost"
             >
-              Annuler
+              Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={!formData.name}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {editingId ? 'Mettre à jour' : 'Créer le profil'}
+              {editingId ? 'Update' : 'Create Profile'}
             </button>
           </div>
         </div>
@@ -407,17 +408,17 @@ export default function RoleProfilesTab() {
       {/* Role Profiles List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {roleProfiles.length === 0 && !isAdding ? (
-          <div className="col-span-2 text-center py-12 text-slate-500">
-            <p>Aucun profil de rôle créé</p>
+          <div className="col-span-2 text-center py-12 text-primary-500 dark:text-primary-400">
+            <p>No role profiles created</p>
             <p className="text-sm mt-1">
-              Les profils de rôle vous permettent de personnaliser votre CV pour différents types de postes
+              Role profiles allow you to customize your CV for different types of positions
             </p>
           </div>
         ) : (
           roleProfiles.map((role) => (
             <div
               key={role.id}
-              className="bg-slate-700/20 rounded-xl p-4 border border-slate-700/50 hover:border-slate-600/50 transition-colors"
+              className="bg-primary-50 dark:bg-primary-700/20 rounded-xl p-4 border border-primary-200 dark:border-primary-700 hover:border-primary-300 dark:hover:border-primary-600 transition-colors"
               style={{ borderLeftColor: role.color, borderLeftWidth: '4px' }}
             >
               <div className="flex items-start justify-between mb-3">
@@ -425,15 +426,15 @@ export default function RoleProfilesTab() {
                   <span className="text-2xl">{role.icon}</span>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-white">{role.name}</h3>
+                      <h3 className="font-semibold text-primary-900 dark:text-primary-50">{role.name}</h3>
                       {role.isDefault && (
-                        <span className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full">
-                          Par défaut
+                        <span className="text-xs px-2 py-0.5 bg-accent-100 dark:bg-accent-500/20 text-accent-700 dark:text-accent-400 rounded-full">
+                          Default
                         </span>
                       )}
                     </div>
                     {role.description && (
-                      <p className="text-slate-400 text-sm">{role.description}</p>
+                      <p className="text-primary-600 dark:text-primary-400 text-sm">{role.description}</p>
                     )}
                   </div>
                 </div>
@@ -441,42 +442,38 @@ export default function RoleProfilesTab() {
                   {!role.isDefault && (
                     <button
                       onClick={() => handleSetDefault(role.id)}
-                      className="p-2 text-slate-400 hover:text-blue-400 transition-colors"
-                      title="Définir par défaut"
+                      className="p-2 text-primary-500 dark:text-primary-400 hover:text-accent-600 dark:hover:text-accent-400 transition-colors"
+                      title="Set as default"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                      </svg>
+                      <Star className="w-4 h-4" />
                     </button>
                   )}
                   <button
                     onClick={() => handleEdit(role)}
-                    className="p-2 text-slate-400 hover:text-white transition-colors"
+                    className="p-2 text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
+                    aria-label="Edit profile"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
+                    <Pencil className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(role.id)}
-                    className="p-2 text-slate-400 hover:text-red-400 transition-colors"
+                    className="p-2 text-primary-500 dark:text-primary-400 hover:text-error-600 dark:hover:text-error-400 transition-colors"
+                    aria-label="Delete profile"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
-              <div className="text-xs text-slate-500">
-                {role.selectedExperienceIds.length} expériences •{' '}
-                {role.selectedSkillIds.length} compétences •{' '}
-                {role.selectedEducationIds.length} formations
+              <div className="text-xs text-primary-500 dark:text-primary-500">
+                {role.selectedExperienceIds.length} experiences •{' '}
+                {role.selectedSkillIds.length} skills •{' '}
+                {role.selectedEducationIds.length} education
               </div>
 
               {role.usageCount > 0 && (
-                <p className="text-xs text-slate-500 mt-2">
-                  Utilisé {role.usageCount} fois
+                <p className="text-xs text-primary-500 dark:text-primary-500 mt-2">
+                  Used {role.usageCount} times
                 </p>
               )}
             </div>

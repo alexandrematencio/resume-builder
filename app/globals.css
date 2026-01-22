@@ -18,15 +18,15 @@
     --color-primary-800: #1E293B;
     --color-primary-900: #0F172A;
 
-    /* Accent - Violet */
-    --color-accent-50: #FAF5FF;
-    --color-accent-100: #F3E8FF;
-    --color-accent-200: #E9D5FF;
-    --color-accent-300: #D8B4FE;
-    --color-accent-400: #C084FC;
-    --color-accent-500: #A855F7;
-    --color-accent-600: #9333EA;
-    --color-accent-700: #7C3AED;
+    /* Accent - Bleu électrique (du logo #1E00FF) */
+    --color-accent-50: #EEEEFF;
+    --color-accent-100: #D4D0FF;
+    --color-accent-200: #ABA3FF;
+    --color-accent-300: #8275FF;
+    --color-accent-400: #5947FF;
+    --color-accent-500: #1E00FF;
+    --color-accent-600: #1800D6;
+    --color-accent-700: #1200AD;
 
     /* Semantic */
     --color-success: #22C55E;

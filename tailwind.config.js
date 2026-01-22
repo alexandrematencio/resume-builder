@@ -23,20 +23,20 @@ module.exports = {
           900: '#0F172A',
           950: '#020617',
         },
-        // ACCENT - Violet mat (premium, discret)
+        // ACCENT - Bleu électrique (du logo #1E00FF)
         accent: {
-          DEFAULT: '#A855F7',
-          50: '#FAF5FF',
-          100: '#F3E8FF',
-          200: '#E9D5FF',
-          300: '#D8B4FE',
-          400: '#C084FC',
-          500: '#A855F7',
-          600: '#9333EA',
-          700: '#7C3AED',
-          800: '#6B21A8',
-          900: '#581C87',
-          950: '#3B0764',
+          DEFAULT: '#1E00FF',
+          50: '#EEEEFF',
+          100: '#D4D0FF',
+          200: '#ABA3FF',
+          300: '#8275FF',
+          400: '#5947FF',
+          500: '#1E00FF',
+          600: '#1800D6',
+          700: '#1200AD',
+          800: '#0C0085',
+          900: '#06005C',
+          950: '#030033',
         },
         // SEMANTIC - Full scales for dark mode support
         success: {

@@ -12,6 +12,7 @@ import {
   Globe,
   Link as LinkIcon,
   Target,
+  Sliders,
   Loader2,
   Check,
   X
@@ -27,6 +28,8 @@ import CertificationsForm from '@/app/components/account/CertificationsForm';
 import LanguagesForm from '@/app/components/account/LanguagesForm';
 import LinksForm from '@/app/components/account/LinksForm';
 import RoleProfilesTab from '@/app/components/account/RoleProfilesTab';
+import JobPreferencesForm from '@/app/components/jobs/JobPreferencesForm';
+import { JobIntelligenceProvider } from '@/app/contexts/JobIntelligenceContext';
 
 type TabId =
   | 'core'
@@ -36,13 +39,14 @@ type TabId =
   | 'certifications'
   | 'languages'
   | 'links'
-  | 'roles';
+  | 'roles'
+  | 'job-prefs';
 
 interface Tab {
   id: TabId;
   label: string;
   icon: React.ReactNode;
-  section: 'profile' | 'extended' | 'roles';
+  section: 'profile' | 'extended' | 'roles' | 'jobs';
 }
 
 const tabs: Tab[] = [
@@ -54,9 +58,10 @@ const tabs: Tab[] = [
   { id: 'languages', label: 'Languages', icon: <Globe className="w-4 h-4" />, section: 'extended' },
   { id: 'links', label: 'Links', icon: <LinkIcon className="w-4 h-4" />, section: 'extended' },
   { id: 'roles', label: 'Role Profiles', icon: <Target className="w-4 h-4" />, section: 'roles' },
+  { id: 'job-prefs', label: 'Job Preferences', icon: <Sliders className="w-4 h-4" />, section: 'jobs' },
 ];
 
-export default function AccountPage() {
+function AccountPageContent() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { profile, profileLoading, isComplete, missingFields } = useProfile();
@@ -154,6 +159,14 @@ export default function AccountPage() {
         );
       case 'roles':
         return <RoleProfilesTab />;
+      case 'job-prefs':
+        return (
+          <JobPreferencesForm
+            onSaveStart={handleSaveStart}
+            onSaveSuccess={handleSaveSuccess}
+            onSaveError={handleSaveError}
+          />
+        );
       default:
         return null;
     }
@@ -284,6 +297,24 @@ export default function AccountPage() {
                     <span className="text-sm font-medium">{tab.label}</span>
                   </button>
                 ))}
+
+                <p className="text-xs font-medium text-primary-500 dark:text-primary-400 uppercase tracking-wider mt-4 mb-2 px-3">
+                  Job Search
+                </p>
+                {tabs.filter(t => t.section === 'jobs').map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                      activeTab === tab.id
+                        ? 'bg-accent-600 text-white'
+                        : 'text-primary-600 dark:text-primary-300 hover:text-primary-900 dark:hover:text-primary-100 hover:bg-primary-100 dark:hover:bg-primary-700'
+                    }`}
+                  >
+                    <span aria-hidden="true">{tab.icon}</span>
+                    <span className="text-sm font-medium">{tab.label}</span>
+                  </button>
+                ))}
               </nav>
             </div>
           </aside>
@@ -297,5 +328,14 @@ export default function AccountPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Wrap with provider
+export default function AccountPage() {
+  return (
+    <JobIntelligenceProvider>
+      <AccountPageContent />
+    </JobIntelligenceProvider>
   );
 }

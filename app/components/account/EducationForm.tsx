@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Pencil, Trash2, AlertTriangle } from 'lucide-react';
 import { useProfile } from '@/app/contexts/ProfileContext';
 import type { Education } from '@/app/types';
 import CVImportSection from './CVImportSection';
@@ -198,8 +199,8 @@ export default function EducationForm({ onSaveStart, onSaveSuccess, onSaveError 
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-white mb-2">Education</h2>
-          <p className="text-slate-400 text-sm">
+          <h2 className="text-xl font-semibold text-primary-900 dark:text-primary-50 mb-2">Education</h2>
+          <p className="text-primary-600 dark:text-primary-400 text-sm">
             Add your degrees and educational background.
           </p>
         </div>
@@ -208,14 +209,14 @@ export default function EducationForm({ onSaveStart, onSaveSuccess, onSaveError 
             {educations.length > 0 && (
               <button
                 onClick={() => setShowClearConfirm(true)}
-                className="px-4 py-2 border border-red-500/50 text-red-400 hover:bg-red-500/10 text-sm font-medium rounded-lg transition-colors"
+                className="btn-ghost text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 text-sm"
               >
                 Clear All
               </button>
             )}
             <button
               onClick={handleAdd}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+              className="btn-primary text-sm"
             >
               + Add
             </button>
@@ -234,20 +235,20 @@ export default function EducationForm({ onSaveStart, onSaveSuccess, onSaveError 
 
       {/* Add/Edit Form */}
       {isAdding && (
-        <div className="bg-slate-700/30 rounded-xl p-6 mb-6 border border-slate-600/50">
-          <h3 className="text-lg font-semibold text-white mb-4">
+        <div className="bg-primary-50 dark:bg-primary-700/30 rounded-xl p-6 mb-6 border border-primary-200 dark:border-primary-600">
+          <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-4">
             {editingId ? 'Edit Education' : 'New Education'}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Degree <span className="text-red-400">*</span>
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                Degree <span className="text-error-500">*</span>
               </label>
               <select
                 value={formData.degree}
                 onChange={(e) => setFormData({ ...formData, degree: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="select-primary"
               >
                 <option value="">Select...</option>
                 {degreeOptions.map((degree) => (
@@ -259,40 +260,40 @@ export default function EducationForm({ onSaveStart, onSaveSuccess, onSaveError 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Institution <span className="text-red-400">*</span>
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                Institution <span className="text-error-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.institution}
                 onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-primary"
                 placeholder="Stanford University"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Field of Study <span className="text-red-400">*</span>
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                Field of Study <span className="text-error-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.field}
                 onChange={(e) => setFormData({ ...formData, field: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-primary"
                 placeholder="Computer Science, Business, Marketing..."
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Start Year <span className="text-red-400">*</span>
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                Start Year <span className="text-error-500">*</span>
               </label>
               <input
                 type="number"
                 value={formData.startYear}
                 onChange={(e) => setFormData({ ...formData, startYear: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-primary"
                 placeholder="2020"
                 min="1950"
                 max="2030"
@@ -300,7 +301,7 @@ export default function EducationForm({ onSaveStart, onSaveSuccess, onSaveError 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
                 End Year
               </label>
               <input
@@ -308,7 +309,7 @@ export default function EducationForm({ onSaveStart, onSaveSuccess, onSaveError 
                 value={formData.endYear}
                 onChange={(e) => setFormData({ ...formData, endYear: e.target.value })}
                 disabled={formData.current}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                className="input-primary disabled:opacity-50"
                 placeholder="2024"
                 min="1950"
                 max="2030"
@@ -321,34 +322,34 @@ export default function EducationForm({ onSaveStart, onSaveSuccess, onSaveError 
                   type="checkbox"
                   checked={formData.current}
                   onChange={(e) => setFormData({ ...formData, current: e.target.checked })}
-                  className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500"
+                  className="w-4 h-4 rounded border-primary-300 dark:border-primary-600 bg-white dark:bg-primary-800 text-accent-600 focus:ring-accent-500"
                 />
-                <span className="text-sm text-slate-300">Currently studying</span>
+                <span className="text-sm text-primary-700 dark:text-primary-300">Currently studying</span>
               </label>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
                 GPA / Honors
               </label>
               <input
                 type="text"
                 value={formData.gpa}
                 onChange={(e) => setFormData({ ...formData, gpa: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-primary"
                 placeholder="3.8/4.0, Cum Laude..."
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
                 Awards / Distinctions
               </label>
               <input
                 type="text"
                 value={formData.honors}
                 onChange={(e) => setFormData({ ...formData, honors: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-primary"
                 placeholder="Valedictorian, Dean's List..."
               />
             </div>
@@ -358,14 +359,14 @@ export default function EducationForm({ onSaveStart, onSaveSuccess, onSaveError 
           <div className="flex justify-end gap-3">
             <button
               onClick={handleCancel}
-              className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+              className="btn-ghost"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={!formData.degree || !formData.institution || !formData.field || !formData.startYear}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {editingId ? 'Update' : 'Add'}
             </button>
@@ -376,7 +377,7 @@ export default function EducationForm({ onSaveStart, onSaveSuccess, onSaveError 
       {/* Education List */}
       <div className="space-y-4">
         {educations.length === 0 && !isAdding ? (
-          <div className="text-center py-12 text-slate-500">
+          <div className="text-center py-12 text-primary-500 dark:text-primary-400">
             <p>No education added yet</p>
             <p className="text-sm mt-1">Click "Add" or import from your CV to get started</p>
           </div>
@@ -384,37 +385,35 @@ export default function EducationForm({ onSaveStart, onSaveSuccess, onSaveError 
           educations.map((edu) => (
             <div
               key={edu.id}
-              className="bg-slate-700/20 rounded-xl p-4 border border-slate-700/50 hover:border-slate-600/50 transition-colors"
+              className="bg-primary-50 dark:bg-primary-700/20 rounded-xl p-4 border border-primary-200 dark:border-primary-700 hover:border-primary-300 dark:hover:border-primary-600 transition-colors"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-semibold text-white">{edu.degree}</h3>
-                  <p className="text-slate-400 text-sm">{edu.institution}</p>
-                  <p className="text-slate-500 text-sm">{edu.field}</p>
-                  <p className="text-slate-500 text-sm">
+                  <h3 className="font-semibold text-primary-900 dark:text-primary-50">{edu.degree}</h3>
+                  <p className="text-primary-600 dark:text-primary-400 text-sm">{edu.institution}</p>
+                  <p className="text-primary-500 dark:text-primary-500 text-sm">{edu.field}</p>
+                  <p className="text-primary-500 dark:text-primary-500 text-sm">
                     {edu.startYear} - {edu.current ? 'Present' : edu.endYear}
                     {edu.gpa && ` | ${edu.gpa}`}
                   </p>
                   {edu.honors && (
-                    <p className="text-blue-400 text-sm mt-1">{edu.honors}</p>
+                    <p className="text-accent-600 dark:text-accent-400 text-sm mt-1">{edu.honors}</p>
                   )}
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEdit(edu)}
-                    className="p-2 text-slate-400 hover:text-white transition-colors"
+                    className="p-2 text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
+                    aria-label="Edit education"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
+                    <Pencil className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(edu.id)}
-                    className="p-2 text-slate-400 hover:text-red-400 transition-colors"
+                    className="p-2 text-primary-500 dark:text-primary-400 hover:text-error-600 dark:hover:text-error-400 transition-colors"
+                    aria-label="Delete education"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -437,29 +436,27 @@ export default function EducationForm({ onSaveStart, onSaveSuccess, onSaveError 
 
       {/* Clear All Confirmation Modal */}
       {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-primary-800 rounded-2xl border border-primary-200 dark:border-primary-700 p-6 max-w-md w-full mx-4 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-red-500/20 rounded-full">
-                <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+              <div className="p-2 bg-error-100 dark:bg-error-900/30 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-error-600 dark:text-error-400" />
               </div>
-              <h3 className="text-lg font-semibold text-white">Clear All Education</h3>
+              <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50">Clear All Education</h3>
             </div>
-            <p className="text-slate-400 text-sm mb-6">
+            <p className="text-primary-600 dark:text-primary-400 text-sm mb-6">
               This will permanently delete all {educations.length} education {educations.length === 1 ? 'entry' : 'entries'}. This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowClearConfirm(false)}
-                className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+                className="btn-ghost"
               >
                 Cancel
               </button>
               <button
                 onClick={handleClearAll}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+                className="btn-danger"
               >
                 Clear All
               </button>

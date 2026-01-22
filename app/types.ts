@@ -336,3 +336,178 @@ export interface RoleProfile {
   createdAt: string;
   updatedAt: string;
 }
+
+// ============================================
+// JOB INTELLIGENCE ENGINE TYPES
+// ============================================
+
+export type RemotePreference = 'full_remote' | 'hybrid' | 'on_site' | 'any';
+export type PresenceType = 'full_remote' | 'hybrid' | 'on_site';
+export type SalaryRateType = 'annual' | 'hourly' | 'daily';
+export type JobOfferStatus = 'new' | 'analyzed' | 'saved' | 'applied' | 'rejected' | 'archived';
+export type FeedbackType = 'helpful' | 'not_helpful' | 'wrong_score' | 'good_match' | 'bad_match';
+export type UserAction = 'saved' | 'applied' | 'dismissed' | 'ignored';
+
+export interface JobPreferences {
+  id: string;
+  userId: string;
+
+  // Location
+  allowedCountries: string[];
+  allowedCities: string[];
+
+  // Salary (annual)
+  minSalary: number | null;
+  salaryCurrency: string;
+
+  // Freelance rates
+  minHourlyRate: number | null;
+  minDailyRate: number | null;
+
+  // Hours
+  minHoursPerWeek: number;
+  maxHoursPerWeek: number;
+
+  // Presence
+  remotePreference: RemotePreference;
+
+  // Perks
+  preferredPerks: string[];
+
+  // Weights (0-100)
+  weightSalary: number;
+  weightSkills: number;
+  weightPerks: number;
+
+  // Thresholds
+  minSkillsMatchPercent: number;
+
+  // GDPR Consent
+  aiConsent: boolean; // User has consented to AI analysis
+
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AIInsights {
+  strengths: string[];
+  skillGaps: string[];
+  strategicAdvice: string;
+  cultureFit: string | null;
+  growthPotential: string | null;
+  redFlags: string[];
+  matchSummary: string;
+}
+
+export interface JobOffer {
+  id: string;
+  userId: string;
+
+  // Basic
+  title: string;
+  company: string;
+  location: string | null;
+  country: string | null;
+  city: string | null;
+
+  // Compensation
+  salaryMin: number | null;
+  salaryMax: number | null;
+  salaryCurrency: string | null;
+  salaryRateType: SalaryRateType | null;
+
+  // Conditions
+  hoursPerWeek: number | null;
+  presenceType: PresenceType | null;
+  contractType: string | null;
+
+  // Content
+  description: string | null;
+  requiredSkills: string[];
+  niceToHaveSkills: string[];
+  perks: string[];
+
+  // Source
+  sourceUrl: string | null;
+  sourcePlatform: string | null;
+
+  // Analysis
+  isBlocked: boolean;
+  blockReasons: string[];
+  skillsMatchPercent: number | null;
+  perksMatchCount: number | null;
+  overallScore: number | null;
+  aiInsights: AIInsights | null;
+
+  // Status
+  status: JobOfferStatus;
+
+  createdAt: string;
+  updatedAt?: string;
+  analyzedAt: string | null;
+}
+
+export interface JobAnalysisResult {
+  isBlocked: boolean;
+  blockReasons: string[];
+  skillsMatchPercent: number;
+  perksMatchCount: number;
+  overallScore: number;
+  aiInsights: AIInsights;
+}
+
+export interface JobAnalysisFeedback {
+  id: string;
+  userId: string;
+  jobOfferId: string;
+  feedbackType: FeedbackType;
+  feedbackNotes?: string;
+  userAction: UserAction;
+  createdAt: string;
+}
+
+export interface JobOfferFilters {
+  status?: JobOfferStatus[];
+  minScore?: number;
+  isBlocked?: boolean;
+  search?: string;
+  sortBy?: 'score' | 'date' | 'company';
+  sortOrder?: 'asc' | 'desc';
+}
+
+// Common perk options for UI
+export const COMMON_PERKS = [
+  'meal_vouchers',
+  'health_insurance',
+  'dental_insurance',
+  'gym_membership',
+  'remote_budget',
+  'training_budget',
+  'stock_options',
+  'bonus',
+  'flexible_hours',
+  'unlimited_pto',
+  'parental_leave',
+  'commute_allowance',
+  'company_car',
+  'phone_allowance',
+  'retirement_plan',
+] as const;
+
+export const PERK_LABELS: Record<string, string> = {
+  meal_vouchers: 'Meal Vouchers',
+  health_insurance: 'Health Insurance',
+  dental_insurance: 'Dental Insurance',
+  gym_membership: 'Gym Membership',
+  remote_budget: 'Remote Work Budget',
+  training_budget: 'Training Budget',
+  stock_options: 'Stock Options',
+  bonus: 'Performance Bonus',
+  flexible_hours: 'Flexible Hours',
+  unlimited_pto: 'Unlimited PTO',
+  parental_leave: 'Parental Leave',
+  commute_allowance: 'Commute Allowance',
+  company_car: 'Company Car',
+  phone_allowance: 'Phone Allowance',
+  retirement_plan: 'Retirement Plan',
+};

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Pencil, Trash2, ExternalLink, AlertTriangle } from 'lucide-react';
 import { useProfile } from '@/app/contexts/ProfileContext';
 import type { PortfolioLink } from '@/app/types';
 
@@ -29,7 +30,7 @@ const linkTypeLabels: Record<PortfolioLink['type'], string> = {
   twitter: 'Twitter / X',
   dribbble: 'Dribbble',
   behance: 'Behance',
-  other: 'Autre',
+  other: 'Other',
 };
 
 const linkTypeIcons: Record<PortfolioLink['type'], string> = {
@@ -43,12 +44,12 @@ const linkTypeIcons: Record<PortfolioLink['type'], string> = {
 };
 
 const linkTypePlaceholders: Record<PortfolioLink['type'], string> = {
-  linkedin: 'https://linkedin.com/in/votre-profil',
-  github: 'https://github.com/votre-username',
-  portfolio: 'https://votre-site.com',
-  twitter: 'https://twitter.com/votre-username',
-  dribbble: 'https://dribbble.com/votre-username',
-  behance: 'https://behance.net/votre-username',
+  linkedin: 'https://linkedin.com/in/your-profile',
+  github: 'https://github.com/your-username',
+  portfolio: 'https://your-website.com',
+  twitter: 'https://twitter.com/your-username',
+  dribbble: 'https://dribbble.com/your-username',
+  behance: 'https://behance.net/your-username',
   other: 'https://...',
 };
 
@@ -141,9 +142,9 @@ export default function LinksForm({ onSaveStart, onSaveSuccess, onSaveError }: P
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-white mb-2">Liens & Portfolio</h2>
-          <p className="text-slate-400 text-sm">
-            Ajoutez vos profils professionnels et liens de portfolio.
+          <h2 className="text-xl font-semibold text-primary-900 dark:text-primary-50 mb-2">Links & Portfolio</h2>
+          <p className="text-primary-600 dark:text-primary-400 text-sm">
+            Add your professional profiles and portfolio links.
           </p>
         </div>
         {!isAdding && (
@@ -151,16 +152,16 @@ export default function LinksForm({ onSaveStart, onSaveSuccess, onSaveError }: P
             {links.length > 0 && (
               <button
                 onClick={() => setShowClearConfirm(true)}
-                className="px-4 py-2 border border-red-500/50 text-red-400 hover:bg-red-500/10 text-sm font-medium rounded-lg transition-colors"
+                className="btn-ghost text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 text-sm"
               >
-                Tout effacer
+                Clear All
               </button>
             )}
             <button
               onClick={handleAdd}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+              className="btn-primary text-sm"
             >
-              + Ajouter
+              + Add
             </button>
           </div>
         )}
@@ -168,20 +169,20 @@ export default function LinksForm({ onSaveStart, onSaveSuccess, onSaveError }: P
 
       {/* Add/Edit Form */}
       {isAdding && (
-        <div className="bg-slate-700/30 rounded-xl p-6 mb-6 border border-slate-600/50">
-          <h3 className="text-lg font-semibold text-white mb-4">
-            {editingId ? 'Modifier le lien' : 'Nouveau lien'}
+        <div className="bg-primary-50 dark:bg-primary-700/30 rounded-xl p-6 mb-6 border border-primary-200 dark:border-primary-600">
+          <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-4">
+            {editingId ? 'Edit Link' : 'New Link'}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Type <span className="text-red-400">*</span>
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                Type <span className="text-error-500">*</span>
               </label>
               <select
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value as PortfolioLink['type'] })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="select-primary"
               >
                 {Object.entries(linkTypeLabels).map(([key, label]) => (
                   <option key={key} value={key}>
@@ -192,28 +193,28 @@ export default function LinksForm({ onSaveStart, onSaveSuccess, onSaveError }: P
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                URL <span className="text-red-400">*</span>
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                URL <span className="text-error-500">*</span>
               </label>
               <input
                 type="url"
                 value={formData.url}
                 onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-primary"
                 placeholder={linkTypePlaceholders[formData.type]}
               />
             </div>
 
             <div className="md:col-span-3">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Label personnalisé (optionnel)
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                Custom Label (optional)
               </label>
               <input
                 type="text"
                 value={formData.label}
                 onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Ex: Mon portfolio de design, Projets open source..."
+                className="input-primary"
+                placeholder="Ex: My design portfolio, Open source projects..."
               />
             </div>
           </div>
@@ -222,16 +223,16 @@ export default function LinksForm({ onSaveStart, onSaveSuccess, onSaveError }: P
           <div className="flex justify-end gap-3">
             <button
               onClick={handleCancel}
-              className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+              className="btn-ghost"
             >
-              Annuler
+              Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={!formData.url}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {editingId ? 'Mettre à jour' : 'Ajouter'}
+              {editingId ? 'Update' : 'Add'}
             </button>
           </div>
         </div>
@@ -240,27 +241,27 @@ export default function LinksForm({ onSaveStart, onSaveSuccess, onSaveError }: P
       {/* Links List */}
       <div className="space-y-3">
         {links.length === 0 && !isAdding ? (
-          <div className="text-center py-12 text-slate-500">
-            <p>Aucun lien ajouté</p>
-            <p className="text-sm mt-1">Cliquez sur "Ajouter" pour commencer</p>
+          <div className="text-center py-12 text-primary-500 dark:text-primary-400">
+            <p>No links added yet</p>
+            <p className="text-sm mt-1">Click &quot;Add&quot; to get started</p>
           </div>
         ) : (
           links.map((link) => (
             <div
               key={link.id}
-              className="group flex items-center justify-between px-4 py-3 bg-slate-700/20 rounded-xl border border-slate-700/50 hover:border-slate-600/50 transition-colors"
+              className="group flex items-center justify-between px-4 py-3 bg-primary-50 dark:bg-primary-700/20 rounded-xl border border-primary-200 dark:border-primary-700 hover:border-primary-300 dark:hover:border-primary-600 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{linkTypeIcons[link.type]}</span>
                 <div>
-                  <p className="font-medium text-white">
+                  <p className="font-medium text-primary-900 dark:text-primary-50">
                     {link.label || linkTypeLabels[link.type]}
                   </p>
                   <a
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-400 hover:text-blue-300 transition-colors truncate block max-w-xs md:max-w-md"
+                    className="text-sm text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 transition-colors truncate block max-w-xs md:max-w-md"
                   >
                     {link.url}
                   </a>
@@ -271,27 +272,24 @@ export default function LinksForm({ onSaveStart, onSaveSuccess, onSaveError }: P
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 text-slate-400 hover:text-white transition-colors"
+                  className="p-2 text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
+                  aria-label="Open link in new tab"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
+                  <ExternalLink className="w-4 h-4" />
                 </a>
                 <button
                   onClick={() => handleEdit(link)}
-                  className="p-2 text-slate-400 hover:text-white transition-colors"
+                  className="p-2 text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
+                  aria-label="Edit link"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
+                  <Pencil className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(link.id)}
-                  className="p-2 text-slate-400 hover:text-red-400 transition-colors"
+                  className="p-2 text-primary-500 dark:text-primary-400 hover:text-error-600 dark:hover:text-error-400 transition-colors"
+                  aria-label="Delete link"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -301,31 +299,29 @@ export default function LinksForm({ onSaveStart, onSaveSuccess, onSaveError }: P
 
       {/* Clear All Confirmation Modal */}
       {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-primary-800 rounded-2xl border border-primary-200 dark:border-primary-700 p-6 max-w-md w-full mx-4 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-red-500/20 rounded-full">
-                <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+              <div className="p-2 bg-error-100 dark:bg-error-900/30 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-error-600 dark:text-error-400" />
               </div>
-              <h3 className="text-lg font-semibold text-white">Effacer tous les liens</h3>
+              <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50">Clear All Links</h3>
             </div>
-            <p className="text-slate-400 text-sm mb-6">
-              Ceci supprimera définitivement les {links.length} lien{links.length === 1 ? '' : 's'}. Cette action est irréversible.
+            <p className="text-primary-600 dark:text-primary-400 text-sm mb-6">
+              This will permanently delete all {links.length} link{links.length === 1 ? '' : 's'}. This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowClearConfirm(false)}
-                className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+                className="btn-ghost"
               >
-                Annuler
+                Cancel
               </button>
               <button
                 onClick={handleClearAll}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+                className="btn-danger"
               >
-                Tout effacer
+                Clear All
               </button>
             </div>
           </div>

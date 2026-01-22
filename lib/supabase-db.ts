@@ -431,6 +431,12 @@ export async function migrateFromLocalStorage(): Promise<{
     return { migratedApps, migratedTemplates, errors: ['Not authenticated'] };
   }
 
+  // Check if migration was already completed for this user
+  const migrationKey = `migration-completed-${userId}`;
+  if (localStorage.getItem(migrationKey) === 'true') {
+    return { migratedApps, migratedTemplates, errors: [] };
+  }
+
   try {
     // Check if data exists in localStorage
     const savedApps = localStorage.getItem('job-applications-v2');
@@ -446,6 +452,12 @@ export async function migrateFromLocalStorage(): Promise<{
       .from('templates')
       .select('id')
       .limit(1);
+
+    // If data already exists in Supabase, mark migration as complete and skip
+    if (existingApps && existingApps.length > 0) {
+      localStorage.setItem(migrationKey, 'true');
+      return { migratedApps, migratedTemplates, errors: [] };
+    }
 
     // Migrate applications if localStorage has data and Supabase is empty for this user
     if (savedApps && (!existingApps || existingApps.length === 0)) {
@@ -536,6 +548,10 @@ export async function migrateFromLocalStorage(): Promise<{
 
   if (errors.length > 0) {
     console.warn('Migration completed with errors:', errors);
+  } else if (migratedApps > 0 || migratedTemplates > 0) {
+    // Mark migration as complete only if successful
+    const migrationKey = `migration-completed-${userId}`;
+    localStorage.setItem(migrationKey, 'true');
   }
 
   return { migratedApps, migratedTemplates, errors };

@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { Upload, FileText, ClipboardList, X, Zap } from 'lucide-react';
 import type { Education, WorkExperience, Skill } from '@/app/types';
 import AIProcessingModal from '@/app/components/AIProcessingModal';
 
@@ -188,12 +189,10 @@ export default function CVImportSection({
   // Idle state - show import options
   if (mode === 'idle') {
     return (
-      <div className="mb-6 p-4 bg-slate-700/30 rounded-xl border border-slate-600/50">
+      <div className="mb-6 p-4 bg-primary-50 dark:bg-primary-700/30 rounded-xl border border-primary-200 dark:border-primary-600">
         <div className="flex items-center gap-2 mb-3">
-          <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
-          <span className="text-sm font-medium text-slate-300">Import from CV</span>
+          <Upload className="w-5 h-5 text-accent-600 dark:text-accent-400" />
+          <span className="text-sm font-medium text-primary-700 dark:text-primary-300">Import from CV</span>
         </div>
 
         <div className="flex gap-3">
@@ -202,37 +201,33 @@ export default function CVImportSection({
             {...getRootProps()}
             className={`flex-1 p-4 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
               isDragActive
-                ? 'border-blue-500 bg-blue-500/10'
-                : 'border-slate-600 hover:border-slate-500 hover:bg-slate-700/30'
+                ? 'border-accent-500 bg-accent-50 dark:bg-accent-500/10'
+                : 'border-primary-300 dark:border-primary-600 hover:border-primary-400 dark:hover:border-primary-500 hover:bg-primary-100 dark:hover:bg-primary-700/30'
             }`}
           >
             <input {...getInputProps()} />
             <div className="flex flex-col items-center text-center">
-              <svg className="w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              <span className="text-sm text-slate-300 font-medium">Import PDF</span>
-              <span className="text-xs text-slate-500 mt-1">Drag & drop or click (max 8MB)</span>
+              <FileText className="w-8 h-8 text-primary-500 dark:text-primary-400 mb-2" />
+              <span className="text-sm text-primary-700 dark:text-primary-300 font-medium">Import PDF</span>
+              <span className="text-xs text-primary-500 dark:text-primary-500 mt-1">Drag & drop or click (max 8MB)</span>
             </div>
           </div>
 
           {/* Text/Paste Import */}
           <button
             onClick={() => setMode('text')}
-            className="flex-1 p-4 border-2 border-dashed border-slate-600 rounded-lg hover:border-slate-500 hover:bg-slate-700/30 transition-colors"
+            className="flex-1 p-4 border-2 border-dashed border-primary-300 dark:border-primary-600 rounded-lg hover:border-primary-400 dark:hover:border-primary-500 hover:bg-primary-100 dark:hover:bg-primary-700/30 transition-colors"
           >
             <div className="flex flex-col items-center text-center">
-              <svg className="w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span className="text-sm text-slate-300 font-medium">Paste Text</span>
-              <span className="text-xs text-slate-500 mt-1">Copy from your CV</span>
+              <ClipboardList className="w-8 h-8 text-primary-500 dark:text-primary-400 mb-2" />
+              <span className="text-sm text-primary-700 dark:text-primary-300 font-medium">Paste Text</span>
+              <span className="text-xs text-primary-500 dark:text-primary-500 mt-1">Copy from your CV</span>
             </div>
           </button>
         </div>
 
         {existingCount > 0 && (
-          <p className="text-xs text-slate-500 mt-3">
+          <p className="text-xs text-primary-500 dark:text-primary-500 mt-3">
             You have {existingCount} existing {existingCount === 1 ? 'entry' : 'entries'}. Imported data can be added or replace existing.
           </p>
         )}
@@ -243,24 +238,20 @@ export default function CVImportSection({
   // Text input mode
   if (mode === 'text') {
     return (
-      <div className="mb-6 p-4 bg-slate-700/30 rounded-xl border border-slate-600/50">
+      <div className="mb-6 p-4 bg-primary-50 dark:bg-primary-700/30 rounded-xl border border-primary-200 dark:border-primary-600">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span className="text-sm font-medium text-slate-300">
+            <ClipboardList className="w-5 h-5 text-accent-600 dark:text-accent-400" />
+            <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
               Paste your {sectionLabels[section]}
             </span>
           </div>
           <button
             onClick={handleCancel}
-            className="text-slate-400 hover:text-white transition-colors"
+            className="text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
             disabled={status === 'parsing'}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -268,19 +259,19 @@ export default function CVImportSection({
           value={textContent}
           onChange={(e) => setTextContent(e.target.value)}
           placeholder={sectionPlaceholders[section]}
-          className="w-full h-48 px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
+          className="textarea-primary h-48 resize-none text-sm"
           disabled={status === 'parsing'}
         />
 
         <div className="flex items-center justify-between mt-3">
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-primary-500 dark:text-primary-500">
             {textContent.length.toLocaleString()} / 50,000 characters
           </span>
 
           <div className="flex gap-2">
             <button
               onClick={handleCancel}
-              className="px-3 py-1.5 text-sm text-slate-400 hover:text-white transition-colors"
+              className="btn-ghost text-sm"
               disabled={status === 'parsing'}
             >
               Cancel
@@ -288,7 +279,7 @@ export default function CVImportSection({
             <button
               onClick={handleTextSubmit}
               disabled={status === 'parsing' || !textContent.trim()}
-              className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {status === 'parsing' ? (
                 <>
@@ -297,9 +288,7 @@ export default function CVImportSection({
                 </>
               ) : (
                 <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
+                  <Zap className="w-4 h-4" />
                   Parse with AI
                 </>
               )}
@@ -308,8 +297,8 @@ export default function CVImportSection({
         </div>
 
         {error && (
-          <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-            <p className="text-sm text-red-400">{error}</p>
+          <div className="mt-3 p-3 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-500/30 rounded-lg">
+            <p className="text-sm text-error-600 dark:text-error-400">{error}</p>
           </div>
         )}
 
@@ -325,39 +314,35 @@ export default function CVImportSection({
   // PDF processing mode
   if (mode === 'pdf') {
     return (
-      <div className="mb-6 p-4 bg-slate-700/30 rounded-xl border border-slate-600/50">
+      <div className="mb-6 p-4 bg-primary-50 dark:bg-primary-700/30 rounded-xl border border-primary-200 dark:border-primary-600">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-            <span className="text-sm font-medium text-slate-300">Processing PDF</span>
+            <FileText className="w-5 h-5 text-accent-600 dark:text-accent-400" />
+            <span className="text-sm font-medium text-primary-700 dark:text-primary-300">Processing PDF</span>
           </div>
           {status === 'error' && (
             <button
               onClick={handleCancel}
-              className="text-slate-400 hover:text-white transition-colors"
+              className="text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X className="w-5 h-5" />
             </button>
           )}
         </div>
 
         {status === 'error' ? (
-          <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-            <p className="text-sm text-red-400 mb-3">{error}</p>
+          <div className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-500/30 rounded-lg">
+            <p className="text-sm text-error-600 dark:text-error-400 mb-3">{error}</p>
             <div className="flex gap-2">
               <button
                 onClick={handleCancel}
-                className="px-3 py-1.5 text-sm text-slate-400 hover:text-white transition-colors"
+                className="btn-ghost text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={() => setMode('text')}
-                className="px-3 py-1.5 text-sm bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-colors"
+                className="px-3 py-1.5 text-sm bg-primary-200 dark:bg-primary-600 text-primary-800 dark:text-primary-100 rounded-lg hover:bg-primary-300 dark:hover:bg-primary-500 transition-colors"
               >
                 Try pasting text instead
               </button>
@@ -365,11 +350,11 @@ export default function CVImportSection({
           </div>
         ) : (
           <div className="flex flex-col items-center py-6">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mb-4" />
-            <p className="text-sm text-slate-300">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-accent-500 mb-4" />
+            <p className="text-sm text-primary-700 dark:text-primary-300">
               {status === 'extracting' ? 'Extracting text from PDF...' : 'Parsing with AI...'}
             </p>
-            <p className="text-xs text-slate-500 mt-1">This may take a moment</p>
+            <p className="text-xs text-primary-500 dark:text-primary-500 mt-1">This may take a moment</p>
           </div>
         )}
 

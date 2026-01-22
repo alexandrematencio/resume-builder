@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Pencil, Trash2, X, AlertTriangle } from 'lucide-react';
 import { useProfile } from '@/app/contexts/ProfileContext';
 import type { Skill, SkillCategory, SkillProficiency } from '@/app/types';
 import CVImportSection from './CVImportSection';
@@ -45,10 +46,10 @@ const proficiencyLabels: Record<SkillProficiency, string> = {
 };
 
 const categoryColors: Record<SkillCategory, string> = {
-  technical: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  soft: 'bg-green-500/20 text-green-400 border-green-500/30',
-  language: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  tool: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  technical: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/30',
+  soft: 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-500/30',
+  language: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-500/30',
+  tool: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-500/30',
 };
 
 export default function SkillsForm({ onSaveStart, onSaveSuccess, onSaveError }: Props) {
@@ -198,10 +199,10 @@ export default function SkillsForm({ onSaveStart, onSaveSuccess, onSaveError }: 
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-white mb-2">Skills</h2>
-          <p className="text-slate-400 text-sm">
+          <h2 className="text-xl font-semibold text-primary-900 dark:text-primary-50 mb-2">Skills</h2>
+          <p className="text-primary-600 dark:text-primary-400 text-sm">
             Add your technical and soft skills.
-            <span className={`ml-2 ${skills.length >= 5 ? 'text-green-400' : 'text-yellow-400'}`}>
+            <span className={`ml-2 ${skills.length >= 5 ? 'text-success-600 dark:text-green-400' : 'text-warning-600 dark:text-yellow-400'}`}>
               ({skills.length}/5 minimum)
             </span>
           </p>
@@ -211,14 +212,14 @@ export default function SkillsForm({ onSaveStart, onSaveSuccess, onSaveError }: 
             {skills.length > 0 && (
               <button
                 onClick={() => setShowClearConfirm(true)}
-                className="px-4 py-2 border border-red-500/50 text-red-400 hover:bg-red-500/10 text-sm font-medium rounded-lg transition-colors"
+                className="btn-ghost text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 text-sm"
               >
                 Clear All
               </button>
             )}
             <button
               onClick={handleAdd}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+              className="btn-primary text-sm"
             >
               + Add
             </button>
@@ -237,33 +238,33 @@ export default function SkillsForm({ onSaveStart, onSaveSuccess, onSaveError }: 
 
       {/* Add/Edit Form */}
       {isAdding && (
-        <div className="bg-slate-700/30 rounded-xl p-6 mb-6 border border-slate-600/50">
-          <h3 className="text-lg font-semibold text-white mb-4">
+        <div className="bg-primary-50 dark:bg-primary-700/30 rounded-xl p-6 mb-6 border border-primary-200 dark:border-primary-600">
+          <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-4">
             {editingId ? 'Edit Skill' : 'New Skill'}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Name <span className="text-red-400">*</span>
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                Name <span className="text-error-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-primary"
                 placeholder="React, Leadership, Python..."
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Category <span className="text-red-400">*</span>
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                Category <span className="text-error-500">*</span>
               </label>
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value as SkillCategory })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="select-primary"
               >
                 {Object.entries(categoryLabels).map(([key, label]) => (
                   <option key={key} value={key}>
@@ -274,13 +275,13 @@ export default function SkillsForm({ onSaveStart, onSaveSuccess, onSaveError }: 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
                 Proficiency
               </label>
               <select
                 value={formData.proficiency}
                 onChange={(e) => setFormData({ ...formData, proficiency: e.target.value as SkillProficiency | '' })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="select-primary"
               >
                 <option value="">Not specified</option>
                 {Object.entries(proficiencyLabels).map(([key, label]) => (
@@ -296,14 +297,14 @@ export default function SkillsForm({ onSaveStart, onSaveSuccess, onSaveError }: 
           <div className="flex justify-end gap-3">
             <button
               onClick={handleCancel}
-              className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+              className="btn-ghost"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={!formData.name || !formData.category}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {editingId ? 'Update' : 'Add'}
             </button>
@@ -317,8 +318,8 @@ export default function SkillsForm({ onSaveStart, onSaveSuccess, onSaveError }: 
           onClick={() => setActiveCategory('all')}
           className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
             activeCategory === 'all'
-              ? 'bg-slate-600 text-white'
-              : 'bg-slate-700/50 text-slate-400 hover:text-white'
+              ? 'bg-primary-600 dark:bg-primary-600 text-white'
+              : 'bg-primary-100 dark:bg-primary-700/50 text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-white'
           }`}
         >
           All ({skillCounts.all})
@@ -329,8 +330,8 @@ export default function SkillsForm({ onSaveStart, onSaveSuccess, onSaveError }: 
             onClick={() => setActiveCategory(key)}
             className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
               activeCategory === key
-                ? 'bg-slate-600 text-white'
-                : 'bg-slate-700/50 text-slate-400 hover:text-white'
+                ? 'bg-primary-600 dark:bg-primary-600 text-white'
+                : 'bg-primary-100 dark:bg-primary-700/50 text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-white'
             }`}
           >
             {label} ({skillCounts[key]})
@@ -341,7 +342,7 @@ export default function SkillsForm({ onSaveStart, onSaveSuccess, onSaveError }: 
       {/* Skills Grid */}
       <div className="flex flex-wrap gap-2">
         {filteredSkills.length === 0 && !isAdding ? (
-          <div className="w-full text-center py-12 text-slate-500">
+          <div className="w-full text-center py-12 text-primary-500 dark:text-primary-400">
             <p>No skills added yet</p>
             <p className="text-sm mt-1">Click "Add" or import from your CV to get started</p>
           </div>
@@ -360,19 +361,17 @@ export default function SkillsForm({ onSaveStart, onSaveSuccess, onSaveError }: 
               <div className="hidden group-hover:flex items-center gap-1 ml-1">
                 <button
                   onClick={() => handleEdit(skill)}
-                  className="p-1 hover:bg-white/10 rounded transition-colors"
+                  className="p-1 hover:bg-white/20 dark:hover:bg-white/10 rounded transition-colors"
+                  aria-label="Edit skill"
                 >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
+                  <Pencil className="w-3 h-3" />
                 </button>
                 <button
                   onClick={() => handleDelete(skill.id)}
-                  className="p-1 hover:bg-white/10 rounded transition-colors text-red-400"
+                  className="p-1 hover:bg-white/20 dark:hover:bg-white/10 rounded transition-colors text-error-600 dark:text-error-400"
+                  aria-label="Delete skill"
                 >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X className="w-3 h-3" />
                 </button>
               </div>
             </div>
@@ -394,29 +393,27 @@ export default function SkillsForm({ onSaveStart, onSaveSuccess, onSaveError }: 
 
       {/* Clear All Confirmation Modal */}
       {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-primary-800 rounded-2xl border border-primary-200 dark:border-primary-700 p-6 max-w-md w-full mx-4 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-red-500/20 rounded-full">
-                <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+              <div className="p-2 bg-error-100 dark:bg-error-900/30 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-error-600 dark:text-error-400" />
               </div>
-              <h3 className="text-lg font-semibold text-white">Clear All Skills</h3>
+              <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50">Clear All Skills</h3>
             </div>
-            <p className="text-slate-400 text-sm mb-6">
+            <p className="text-primary-600 dark:text-primary-400 text-sm mb-6">
               This will permanently delete all {skills.length} {skills.length === 1 ? 'skill' : 'skills'}. This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowClearConfirm(false)}
-                className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+                className="btn-ghost"
               >
                 Cancel
               </button>
               <button
                 onClick={handleClearAll}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+                className="btn-danger"
               >
                 Clear All
               </button>

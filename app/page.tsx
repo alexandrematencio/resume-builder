@@ -1325,20 +1325,32 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
       {/* Header */}
       <div className="bg-white dark:bg-primary-800 border-b border-primary-200 dark:border-primary-700 shadow-sm sticky top-0 z-30 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <img src="/logo.svg" alt="Logo" className="h-10 w-auto" />
-            <div>
-              <h1 className="text-2xl font-semibold text-primary-900 dark:text-primary-50">
-                Applications
-              </h1>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
+              <img src="/logo.svg" alt="Logo" className="h-10 w-auto" />
+              <nav className="flex items-center gap-1">
+                <span className="px-3 py-2 text-sm font-medium text-primary-900 dark:text-primary-50 bg-primary-100 dark:bg-primary-700 rounded-lg">
+                  Applications
+                </span>
+                <button
+                  onClick={() => router.push('/jobs')}
+                  className="px-3 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-100 hover:bg-primary-100 dark:hover:bg-primary-700 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <Briefcase className="w-4 h-4" />
+                  Jobs
+                </button>
+              </nav>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Button onClick={() => setShowNewAppModal(true)} size="lg">
+            <button
+              onClick={() => setShowNewAppModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-accent-600 text-white rounded-lg text-sm font-medium hover:bg-accent-700 transition-colors"
+            >
               <Plus className="w-4 h-4 mr-2" aria-hidden="true" />
               New application
-            </Button>
+            </button>
             {user && (
               <div className="relative" ref={userMenuRef}>
                 <button

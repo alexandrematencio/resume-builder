@@ -93,6 +93,12 @@ export default function LoginPage() {
                 Sign up
               </Link>
             </p>
+
+            <div className="mt-4 pt-4 border-t border-slate-700/50 text-center">
+              <Link href="/landing" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
+                Return to homepage
+              </Link>
+            </div>
           </div>
         </div>
       </div>

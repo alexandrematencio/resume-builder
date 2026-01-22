@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Pencil, Trash2, X, AlertTriangle } from 'lucide-react';
 import { useProfile } from '@/app/contexts/ProfileContext';
 import type { WorkExperience } from '@/app/types';
 import CVImportSection from './CVImportSection';
@@ -197,8 +198,8 @@ export default function WorkExperienceForm({ onSaveStart, onSaveSuccess, onSaveE
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-white mb-2">Work Experience</h2>
-          <p className="text-slate-400 text-sm">
+          <h2 className="text-xl font-semibold text-primary-900 dark:text-primary-50 mb-2">Work Experience</h2>
+          <p className="text-primary-600 dark:text-primary-400 text-sm">
             Add your work experience with measurable achievements.
           </p>
         </div>
@@ -207,14 +208,14 @@ export default function WorkExperienceForm({ onSaveStart, onSaveSuccess, onSaveE
             {experiences.length > 0 && (
               <button
                 onClick={() => setShowClearConfirm(true)}
-                className="px-4 py-2 border border-red-500/50 text-red-400 hover:bg-red-500/10 text-sm font-medium rounded-lg transition-colors"
+                className="btn-ghost text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 text-sm"
               >
                 Clear All
               </button>
             )}
             <button
               onClick={handleAdd}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+              className="btn-primary text-sm"
             >
               + Add
             </button>
@@ -233,47 +234,47 @@ export default function WorkExperienceForm({ onSaveStart, onSaveSuccess, onSaveE
 
       {/* Add/Edit Form */}
       {isAdding && (
-        <div className="bg-slate-700/30 rounded-xl p-6 mb-6 border border-slate-600/50">
-          <h3 className="text-lg font-semibold text-white mb-4">
+        <div className="bg-primary-50 dark:bg-primary-700/30 rounded-xl p-6 mb-6 border border-primary-200 dark:border-primary-600">
+          <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-4">
             {editingId ? 'Edit Experience' : 'New Experience'}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Job Title <span className="text-red-400">*</span>
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                Job Title <span className="text-error-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-primary"
                 placeholder="Senior Software Engineer"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Company <span className="text-red-400">*</span>
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                Company <span className="text-error-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.company}
                 onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-primary"
                 placeholder="Google"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
                 Location
               </label>
               <input
                 type="text"
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-primary"
                 placeholder="San Francisco, CA"
               />
             </div>
@@ -284,30 +285,30 @@ export default function WorkExperienceForm({ onSaveStart, onSaveSuccess, onSaveE
                   type="checkbox"
                   checked={formData.current}
                   onChange={(e) => setFormData({ ...formData, current: e.target.checked })}
-                  className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500"
+                  className="w-4 h-4 rounded border-primary-300 dark:border-primary-600 bg-white dark:bg-primary-800 text-accent-600 focus:ring-accent-500"
                 />
-                <span className="text-sm text-slate-300">Current position</span>
+                <span className="text-sm text-primary-700 dark:text-primary-300">Current position</span>
               </label>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Start Date <span className="text-red-400">*</span>
-                <span className="text-slate-500 font-normal ml-1">(dd-mm-yyyy)</span>
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                Start Date <span className="text-error-500">*</span>
+                <span className="text-primary-500 dark:text-primary-500 font-normal ml-1">(dd-mm-yyyy)</span>
               </label>
               <input
                 type="text"
                 value={formData.startDate}
                 onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                 placeholder="01-09-2020"
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-primary"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
                 End Date
-                <span className="text-slate-500 font-normal ml-1">(dd-mm-yyyy)</span>
+                <span className="text-primary-500 dark:text-primary-500 font-normal ml-1">(dd-mm-yyyy)</span>
               </label>
               <input
                 type="text"
@@ -315,17 +316,17 @@ export default function WorkExperienceForm({ onSaveStart, onSaveSuccess, onSaveE
                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                 disabled={formData.current}
                 placeholder="01-07-2023"
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                className="input-primary disabled:opacity-50"
               />
             </div>
           </div>
 
           {/* Achievements */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
               Achievements
             </label>
-            <p className="text-slate-500 text-xs mb-3">
+            <p className="text-primary-500 dark:text-primary-500 text-xs mb-3">
               Use action verbs and quantifiable metrics when possible.
             </p>
             {formData.achievements.map((achievement, index) => (
@@ -334,24 +335,22 @@ export default function WorkExperienceForm({ onSaveStart, onSaveSuccess, onSaveE
                   type="text"
                   value={achievement}
                   onChange={(e) => updateAchievement(index, e.target.value)}
-                  className="flex-1 px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input-primary flex-1"
                   placeholder="e.g., Increased conversion rate by 25% through UX optimization"
                 />
                 <button
                   type="button"
                   onClick={() => removeAchievement(index)}
-                  className="px-3 py-2 text-slate-400 hover:text-red-400 transition-colors"
+                  className="px-3 py-2 text-primary-500 dark:text-primary-400 hover:text-error-600 dark:hover:text-error-400 transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X className="w-5 h-5" />
                 </button>
               </div>
             ))}
             <button
               type="button"
               onClick={addAchievement}
-              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+              className="text-sm text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 transition-colors"
             >
               + Add achievement
             </button>
@@ -361,14 +360,14 @@ export default function WorkExperienceForm({ onSaveStart, onSaveSuccess, onSaveE
           <div className="flex justify-end gap-3">
             <button
               onClick={handleCancel}
-              className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+              className="btn-ghost"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={!formData.title || !formData.company || !formData.startDate}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {editingId ? 'Update' : 'Add'}
             </button>
@@ -379,7 +378,7 @@ export default function WorkExperienceForm({ onSaveStart, onSaveSuccess, onSaveE
       {/* Experience List */}
       <div className="space-y-4">
         {experiences.length === 0 && !isAdding ? (
-          <div className="text-center py-12 text-slate-500">
+          <div className="text-center py-12 text-primary-500 dark:text-primary-400">
             <p>No work experience added yet</p>
             <p className="text-sm mt-1">Click "Add" or import from your CV to get started</p>
           </div>
@@ -387,43 +386,41 @@ export default function WorkExperienceForm({ onSaveStart, onSaveSuccess, onSaveE
           experiences.map((exp) => (
             <div
               key={exp.id}
-              className="bg-slate-700/20 rounded-xl p-4 border border-slate-700/50 hover:border-slate-600/50 transition-colors"
+              className="bg-primary-50 dark:bg-primary-700/20 rounded-xl p-4 border border-primary-200 dark:border-primary-700 hover:border-primary-300 dark:hover:border-primary-600 transition-colors"
             >
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h3 className="font-semibold text-white">{exp.title}</h3>
-                  <p className="text-slate-400 text-sm">
+                  <h3 className="font-semibold text-primary-900 dark:text-primary-50">{exp.title}</h3>
+                  <p className="text-primary-600 dark:text-primary-400 text-sm">
                     {exp.company}
                     {exp.location && ` | ${exp.location}`}
                   </p>
-                  <p className="text-slate-500 text-sm">
+                  <p className="text-primary-500 dark:text-primary-500 text-sm">
                     {exp.startDate} - {exp.current ? 'Present' : exp.endDate}
                   </p>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEdit(exp)}
-                    className="p-2 text-slate-400 hover:text-white transition-colors"
+                    className="p-2 text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
+                    aria-label="Edit experience"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
+                    <Pencil className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(exp.id)}
-                    className="p-2 text-slate-400 hover:text-red-400 transition-colors"
+                    className="p-2 text-primary-500 dark:text-primary-400 hover:text-error-600 dark:hover:text-error-400 transition-colors"
+                    aria-label="Delete experience"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
               {exp.achievements.length > 0 && (
                 <ul className="mt-3 space-y-1">
                   {exp.achievements.map((achievement, i) => (
-                    <li key={i} className="text-slate-400 text-sm flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
+                    <li key={i} className="text-primary-600 dark:text-primary-400 text-sm flex items-start gap-2">
+                      <span className="text-accent-600 dark:text-accent-400 mt-1">•</span>
                       {achievement}
                     </li>
                   ))}
@@ -448,29 +445,27 @@ export default function WorkExperienceForm({ onSaveStart, onSaveSuccess, onSaveE
 
       {/* Clear All Confirmation Modal */}
       {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-primary-800 rounded-2xl border border-primary-200 dark:border-primary-700 p-6 max-w-md w-full mx-4 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-red-500/20 rounded-full">
-                <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+              <div className="p-2 bg-error-100 dark:bg-error-900/30 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-error-600 dark:text-error-400" />
               </div>
-              <h3 className="text-lg font-semibold text-white">Clear All Experience</h3>
+              <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50">Clear All Experience</h3>
             </div>
-            <p className="text-slate-400 text-sm mb-6">
+            <p className="text-primary-600 dark:text-primary-400 text-sm mb-6">
               This will permanently delete all {experiences.length} work experience {experiences.length === 1 ? 'entry' : 'entries'}. This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowClearConfirm(false)}
-                className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+                className="btn-ghost"
               >
                 Cancel
               </button>
               <button
                 onClick={handleClearAll}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+                className="btn-danger"
               >
                 Clear All
               </button>

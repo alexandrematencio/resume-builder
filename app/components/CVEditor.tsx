@@ -82,8 +82,6 @@ export default function CVEditor({ application, onSave, onCancel, onDeleteApplic
       };
     }
 
-    console.log('Parsing CV content:', cv.content);
-
     const trimmedContent = cv.content.trim();
     if (trimmedContent.startsWith('{') && trimmedContent.endsWith('}')) {
       try {
@@ -368,7 +366,6 @@ export default function CVEditor({ application, onSave, onCancel, onDeleteApplic
     result.skills = [...new Set(result.skills)]
       .filter(s => s && !s.match(/^(design|technical|additional|languages|tools|web|mobile|methodologies)/i));
 
-    console.log('Parsed result:', result);
     return result;
   };
 
@@ -378,7 +375,6 @@ export default function CVEditor({ application, onSave, onCancel, onDeleteApplic
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
-    console.log('CVEditor: Re-parsing CV due to prop change', { selectedCVId, versionsCount: application.cvVersions.length });
     const newData = parseInitialCV();
     setCvData(newData);
     // eslint-disable-next-line react-hooks/exhaustive-deps
