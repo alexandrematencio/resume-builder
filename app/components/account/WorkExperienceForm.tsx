@@ -232,11 +232,11 @@ export default function WorkExperienceForm({ onSaveStart, onSaveSuccess, onSaveE
         />
       )}
 
-      {/* Add/Edit Form */}
-      {isAdding && (
+      {/* Add Form (new item only) */}
+      {isAdding && !editingId && (
         <div className="bg-primary-50 dark:bg-primary-700/30 rounded-xl p-6 mb-6 border border-primary-200 dark:border-primary-600">
           <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-4">
-            {editingId ? 'Edit Experience' : 'New Experience'}
+            New Experience
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -384,47 +384,186 @@ export default function WorkExperienceForm({ onSaveStart, onSaveSuccess, onSaveE
           </div>
         ) : (
           experiences.map((exp) => (
-            <div
-              key={exp.id}
-              className="bg-primary-50 dark:bg-primary-700/20 rounded-xl p-4 border border-primary-200 dark:border-primary-700 hover:border-primary-300 dark:hover:border-primary-600 transition-colors"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h3 className="font-semibold text-primary-900 dark:text-primary-50">{exp.title}</h3>
-                  <p className="text-primary-600 dark:text-primary-400 text-sm">
-                    {exp.company}
-                    {exp.location && ` | ${exp.location}`}
-                  </p>
-                  <p className="text-primary-500 dark:text-primary-500 text-sm">
-                    {exp.startDate} - {exp.current ? 'Present' : exp.endDate}
-                  </p>
+            <div key={exp.id}>
+              {isAdding && editingId === exp.id ? (
+                <div className="bg-primary-50 dark:bg-primary-700/30 rounded-xl p-6 border border-accent-300 dark:border-accent-600">
+                  <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-4">
+                    Edit Experience
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                        Job Title <span className="text-error-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        className="input-primary"
+                        placeholder="Senior Software Engineer"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                        Company <span className="text-error-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.company}
+                        onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                        className="input-primary"
+                        placeholder="Google"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                        Location
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.location}
+                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                        className="input-primary"
+                        placeholder="San Francisco, CA"
+                      />
+                    </div>
+
+                    <div className="flex items-end">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.current}
+                          onChange={(e) => setFormData({ ...formData, current: e.target.checked })}
+                          className="w-4 h-4 rounded border-primary-300 dark:border-primary-600 bg-white dark:bg-primary-800 text-accent-600 focus:ring-accent-500"
+                        />
+                        <span className="text-sm text-primary-700 dark:text-primary-300">Current position</span>
+                      </label>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                        Start Date <span className="text-error-500">*</span>
+                        <span className="text-primary-500 dark:text-primary-500 font-normal ml-1">(dd-mm-yyyy)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.startDate}
+                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                        placeholder="01-09-2020"
+                        className="input-primary"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                        End Date
+                        <span className="text-primary-500 dark:text-primary-500 font-normal ml-1">(dd-mm-yyyy)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.endDate}
+                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                        disabled={formData.current}
+                        placeholder="01-07-2023"
+                        className="input-primary disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                      Achievements
+                    </label>
+                    <p className="text-primary-500 dark:text-primary-500 text-xs mb-3">
+                      Use action verbs and quantifiable metrics when possible.
+                    </p>
+                    {formData.achievements.map((achievement, index) => (
+                      <div key={index} className="flex gap-2 mb-2">
+                        <input
+                          type="text"
+                          value={achievement}
+                          onChange={(e) => updateAchievement(index, e.target.value)}
+                          className="input-primary flex-1"
+                          placeholder="e.g., Increased conversion rate by 25% through UX optimization"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeAchievement(index)}
+                          className="px-3 py-2 text-primary-500 dark:text-primary-400 hover:text-error-600 dark:hover:text-error-400 transition-colors"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={addAchievement}
+                      className="text-sm text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 transition-colors"
+                    >
+                      + Add achievement
+                    </button>
+                  </div>
+
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={handleCancel}
+                      className="btn-ghost"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      disabled={!formData.title || !formData.company || !formData.startDate}
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Update
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(exp)}
-                    className="p-2 text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
-                    aria-label="Edit experience"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(exp.id)}
-                    className="p-2 text-primary-500 dark:text-primary-400 hover:text-error-600 dark:hover:text-error-400 transition-colors"
-                    aria-label="Delete experience"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+              ) : (
+                <div className="bg-primary-50 dark:bg-primary-700/20 rounded-xl p-4 border border-primary-200 dark:border-primary-700 hover:border-primary-300 dark:hover:border-primary-600 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h3 className="font-semibold text-primary-900 dark:text-primary-50">{exp.title}</h3>
+                      <p className="text-primary-600 dark:text-primary-400 text-sm">
+                        {exp.company}
+                        {exp.location && ` | ${exp.location}`}
+                      </p>
+                      <p className="text-primary-500 dark:text-primary-500 text-sm">
+                        {exp.startDate} - {exp.current ? 'Present' : exp.endDate}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEdit(exp)}
+                        className="p-2 text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
+                        aria-label="Edit experience"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(exp.id)}
+                        className="p-2 text-primary-500 dark:text-primary-400 hover:text-error-600 dark:hover:text-error-400 transition-colors"
+                        aria-label="Delete experience"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  {exp.achievements.length > 0 && (
+                    <ul className="mt-3 space-y-1">
+                      {exp.achievements.map((achievement, i) => (
+                        <li key={i} className="text-primary-600 dark:text-primary-400 text-sm flex items-start gap-2">
+                          <span className="text-accent-600 dark:text-accent-400 mt-1">•</span>
+                          {achievement}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-              </div>
-              {exp.achievements.length > 0 && (
-                <ul className="mt-3 space-y-1">
-                  {exp.achievements.map((achievement, i) => (
-                    <li key={i} className="text-primary-600 dark:text-primary-400 text-sm flex items-start gap-2">
-                      <span className="text-accent-600 dark:text-accent-400 mt-1">•</span>
-                      {achievement}
-                    </li>
-                  ))}
-                </ul>
               )}
             </div>
           ))

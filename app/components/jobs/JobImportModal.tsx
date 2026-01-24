@@ -20,7 +20,7 @@ export default function JobImportModal({ isOpen, onClose, onJobImported }: JobIm
   const [description, setDescription] = useState('');
   const [url, setUrl] = useState('');
   const [parsedData, setParsedData] = useState<Partial<JobOffer> | null>(null);
-  const [step, setStep] = useState<'input' | 'preview' | 'saving' | 'analyzing' | 'fetching'>('input');
+  const [step, setStep] = useState<'input' | 'parsing' | 'preview' | 'saving' | 'analyzing' | 'fetching'>('input');
   const [error, setError] = useState<string | null>(null);
   const [fetchedContent, setFetchedContent] = useState<string | null>(null);
   const [showConsentModal, setShowConsentModal] = useState(false);
@@ -81,6 +81,7 @@ export default function JobImportModal({ isOpen, onClose, onJobImported }: JobIm
       setDescription(content);
     }
 
+    setStep('parsing');
     const result = await parseJobDescription(textToParse);
     if (result) {
       setParsedData(result);
@@ -190,6 +191,7 @@ export default function JobImportModal({ isOpen, onClose, onJobImported }: JobIm
           <h2 className="text-lg font-semibold text-primary-900 dark:text-primary-50">
             {step === 'input' && 'Import Job'}
             {step === 'fetching' && 'Fetching Job Page...'}
+            {step === 'parsing' && 'Parsing Description...'}
             {step === 'preview' && 'Review Parsed Data'}
             {step === 'saving' && 'Saving Job...'}
             {step === 'analyzing' && 'Analyzing Job...'}
@@ -421,6 +423,14 @@ export default function JobImportModal({ isOpen, onClose, onJobImported }: JobIm
               <Globe className="w-10 h-10 text-accent-600 animate-pulse mb-4" />
               <p className="text-primary-600 dark:text-primary-400">Fetching job page content...</p>
               <p className="text-sm text-primary-500 dark:text-primary-500 mt-2">Extracting job details from the URL</p>
+            </div>
+          )}
+
+          {step === 'parsing' && (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Sparkles className="w-10 h-10 text-accent-600 animate-pulse mb-4" />
+              <p className="text-primary-600 dark:text-primary-400">Parsing job description...</p>
+              <p className="text-sm text-primary-500 dark:text-primary-500 mt-2">Extracting salary, skills, perks and more</p>
             </div>
           )}
 

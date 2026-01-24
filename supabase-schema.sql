@@ -175,6 +175,7 @@ CREATE TABLE IF NOT EXISTS job_offers (
   salary_min INTEGER,
   salary_max INTEGER,
   salary_currency TEXT,
+  salary_rate_type TEXT CHECK (salary_rate_type IN ('annual', 'monthly', 'hourly', 'daily')),
 
   -- Work conditions
   hours_per_week INTEGER,

@@ -44,6 +44,12 @@ interface CVDetailModalProps {
   onCreateNewCoverLetterVersion?: (appId: string, currentCoverLetterId: string) => string | void;
   onDownloadCoverLetter?: (coverLetter: CoverLetter, app: Application) => void;
   onSetMainCoverLetter?: (appId: string, coverLetterId: string) => void;
+  // Status action props
+  onMarkAsSent?: (appId: string) => void;
+  onScheduleInterview?: (appId: string) => void;
+  onMarkOffer?: (appId: string) => void;
+  onMarkRejected?: (appId: string) => void;
+  onDeclineOffer?: (appId: string) => void;
 }
 
 export default function CVDetailModal({
@@ -61,12 +67,17 @@ export default function CVDetailModal({
   onCreateNewCoverLetterVersion,
   onDownloadCoverLetter,
   onSetMainCoverLetter,
+  onMarkAsSent,
+  onScheduleInterview,
+  onMarkOffer,
+  onMarkRejected,
+  onDeclineOffer,
 }: CVDetailModalProps) {
   // Get user profile for pre-filling age
   const { profile } = useProfile();
 
-  // Tab state: 'cv' or 'cover-letter'
-  const [activeTab, setActiveTab] = useState<'cv' | 'cover-letter'>('cv');
+  // Tab state: 'cv', 'cover-letter', or 'job-offer'
+  const [activeTab, setActiveTab] = useState<'cv' | 'cover-letter' | 'job-offer'>('cv');
 
   // CV states
   const [selectedCVId, setSelectedCVId] = useState(
@@ -652,18 +663,33 @@ export default function CVDetailModal({
                   ✉️ <span>Letter</span>
                 </span>
               </button>
+              <button
+                onClick={() => setActiveTab('job-offer')}
+                className={`flex-1 px-4 py-2.5 font-medium transition-all relative ${
+                  activeTab === 'job-offer'
+                    ? 'bg-white text-primary-700 rounded-t-xl border-t-2 border-primary-600'
+                    : 'bg-transparent text-gray-600 hover:bg-gray-50/50 rounded-t-lg'
+                }`}
+                style={activeTab === 'job-offer' ? { marginBottom: '-1px' } : {}}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  📋 <span>Job</span>
+                </span>
+              </button>
             </div>
           </div>
 
           {/* Tab Content Header */}
           <div className="p-6 bg-white">
             <h3 className="text-lg font-bold text-gray-900 mb-1">
-              {activeTab === 'cv' ? 'CV Versions' : 'Cover Letters'}
+              {activeTab === 'cv' ? 'CV Versions' : activeTab === 'cover-letter' ? 'Cover Letters' : 'Original Job Posting'}
             </h3>
             <p className="text-sm text-gray-600">
               {activeTab === 'cv'
                 ? `${application.cvVersions.length} version${application.cvVersions.length > 1 ? 's' : ''}`
-                : `${application.coverLetters.length} letter${application.coverLetters.length > 1 ? 's' : ''}`
+                : activeTab === 'cover-letter'
+                ? `${application.coverLetters.length} letter${application.coverLetters.length > 1 ? 's' : ''}`
+                : application.jobDescription ? 'Saved with this application' : 'No description saved'
               }
             </p>
             <div className="mt-4 border-b border-gray-200"></div>
@@ -975,6 +1001,84 @@ export default function CVDetailModal({
               )}
             </>
           )}
+
+          {/* Job Offer Tab Content */}
+          {activeTab === 'job-offer' && (
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="p-4 space-y-4">
+                {application.jobUrl && (
+                  <a
+                    href={application.jobUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm text-accent-600 hover:text-accent-700 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Open original posting
+                  </a>
+                )}
+                <p className="text-xs text-gray-500">
+                  The full job description as saved when creating this application.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Status Actions */}
+          {(onMarkAsSent || onScheduleInterview || onMarkOffer || onMarkRejected || onDeclineOffer) && (
+            <div className="mt-auto p-4 border-t border-gray-200 bg-gray-50/50">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Actions</p>
+              <div className="flex flex-wrap gap-1.5">
+                {onMarkAsSent && application.status === 'draft' && (
+                  <button
+                    onClick={() => onMarkAsSent(application.id)}
+                    className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-info-50 text-info-700 hover:bg-info-100 transition-colors flex items-center gap-1"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                    Send
+                  </button>
+                )}
+                {onScheduleInterview && application.status !== 'draft' && application.status !== 'rejected' && application.status !== 'closed' && (
+                  <button
+                    onClick={() => onScheduleInterview(application.id)}
+                    className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-accent-50 text-accent-700 hover:bg-accent-100 transition-colors flex items-center gap-1"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    Interview
+                  </button>
+                )}
+                {onMarkOffer && (application.status === 'interview' || application.status === 'waiting') && (
+                  <button
+                    onClick={() => onMarkOffer(application.id)}
+                    className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-success-50 text-success-700 hover:bg-success-100 transition-colors flex items-center gap-1"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                    Offer
+                  </button>
+                )}
+                {onMarkRejected && application.status !== 'draft' && application.status !== 'rejected' && application.status !== 'closed' && application.status !== 'offer' && (
+                  <button
+                    onClick={() => onMarkRejected(application.id)}
+                    className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-error-50 text-error-700 hover:bg-error-100 transition-colors flex items-center gap-1"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                    Rejected
+                  </button>
+                )}
+                {onDeclineOffer && application.status === 'offer' && (
+                  <button
+                    onClick={() => onDeclineOffer(application.id)}
+                    className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-warning-50 text-warning-700 hover:bg-warning-100 transition-colors flex items-center gap-1"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    Decline
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Main Content - CV or Cover Letter Preview */}
@@ -988,7 +1092,9 @@ export default function CVDetailModal({
               <p className="text-sm text-gray-600 mt-1">
                 {activeTab === 'cv'
                   ? selectedCV && `CV Version ${selectedCV.version}`
-                  : selectedCoverLetter && `Cover Letter v${selectedCoverLetter.version}`
+                  : activeTab === 'cover-letter'
+                  ? selectedCoverLetter && `Cover Letter v${selectedCoverLetter.version}`
+                  : 'Original Job Posting'
                 }
               </p>
             </div>
@@ -1032,7 +1138,7 @@ export default function CVDetailModal({
                     </button>
                   </>
                 )
-              ) : (
+              ) : activeTab === 'cover-letter' ? (
                 // Cover Letter Actions
                 !isCoverLetterEditing ? (
                   <>
@@ -1071,7 +1177,7 @@ export default function CVDetailModal({
                     </button>
                   </>
                 )
-              )}
+              ) : null}
               <button
                 onClick={onClose}
                 className="text-gray-400 hover:text-gray-600 text-2xl w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
@@ -1283,7 +1389,7 @@ export default function CVDetailModal({
               )}
             </div>
           </div>
-          ) : (
+          ) : activeTab === 'cover-letter' ? (
             // Cover Letter Content
             <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
               <div className="max-w-4xl mx-auto">
@@ -1452,6 +1558,51 @@ export default function CVDetailModal({
                       </div>
                     );
                   })()
+                )}
+              </div>
+            </div>
+          ) : (
+            // Job Offer Content
+            <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
+              <div className="max-w-3xl mx-auto">
+                {application.jobDescription ? (
+                  <div className="bg-white rounded-2xl shadow-sm p-8">
+                    {application.jobUrl && (
+                      <a
+                        href={application.jobUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-sm text-accent-600 hover:text-accent-700 mb-6 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        Open original posting
+                      </a>
+                    )}
+                    <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {application.jobDescription}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-20 text-gray-500">
+                    <p className="text-6xl mb-4">📋</p>
+                    <p className="text-xl font-semibold mb-2">No job description saved</p>
+                    <p className="text-sm">No job description was saved when creating this application.</p>
+                    {application.jobUrl && (
+                      <a
+                        href={application.jobUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 mt-4 text-sm text-accent-600 hover:text-accent-700 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        Open original posting
+                      </a>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

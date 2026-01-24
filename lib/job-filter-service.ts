@@ -5,6 +5,7 @@ import type {
   AIInsights,
   Skill,
   UserProfile,
+  WorkExperience,
 } from '@/app/types';
 
 // ============================================
@@ -37,6 +38,14 @@ export function applyHardBlockers(
     if (job.salaryMax < prefs.minDailyRate) {
       reasons.push(
         `Daily rate below minimum (max offered: ${formatCurrency(job.salaryMax, job.salaryCurrency || 'EUR')}/day, min required: ${formatCurrency(prefs.minDailyRate, prefs.salaryCurrency)}/day)`
+      );
+    }
+  } else if (rateType === 'monthly' && prefs.minSalary && job.salaryMax) {
+    // Monthly salary → normalize to annual for comparison
+    const annualizedMax = job.salaryMax * 12;
+    if (annualizedMax < prefs.minSalary) {
+      reasons.push(
+        `Monthly salary below minimum (offered: ${formatCurrency(job.salaryMax, job.salaryCurrency || 'EUR')}/month = ${formatCurrency(annualizedMax, job.salaryCurrency || 'EUR')}/year, min required: ${formatCurrency(prefs.minSalary, prefs.salaryCurrency)}/year)`
       );
     }
   } else if (rateType === 'annual' && prefs.minSalary && job.salaryMax) {
@@ -108,52 +117,102 @@ export function applyHardBlockers(
 // SEMANTIC SCORING
 // ============================================
 
+// Split compound skills on separators: /, &, " et ", " and "
+function splitCompoundSkill(skill: string): string[] {
+  const parts = skill.split(/[\/&]|\s+et\s+|\s+and\s+/gi)
+    .map(s => s.trim().toLowerCase())
+    .filter(s => s.length > 0);
+  // Always include the original for exact matching
+  const original = skill.toLowerCase();
+  if (parts.length <= 1) return [original];
+  return [original, ...parts];
+}
+
+// Build searchable texts from profile (skills + experience)
+function buildProfileTexts(
+  userSkills: Skill[],
+  workExperience?: WorkExperience[]
+): { skillNames: string[]; experienceTexts: string[] } {
+  const skillNames = userSkills.map((s) => s.name.toLowerCase());
+  const experienceTexts: string[] = [];
+  for (const exp of workExperience || []) {
+    if (exp.title) experienceTexts.push(exp.title.toLowerCase());
+    for (const achievement of exp.achievements || []) {
+      experienceTexts.push(achievement.toLowerCase());
+    }
+  }
+  return { skillNames, experienceTexts };
+}
+
 export function calculateSkillsMatch(
   jobSkills: string[],
-  userSkills: Skill[]
+  userSkills: Skill[],
+  workExperience?: WorkExperience[]
 ): number {
   if (jobSkills.length === 0) {
     return 100; // No requirements = perfect match
   }
 
-  const userSkillNames = userSkills.map((s) => s.name.toLowerCase());
+  const { skillNames, experienceTexts } = buildProfileTexts(userSkills, workExperience);
 
   let matchCount = 0;
   for (const jobSkill of jobSkills) {
-    const normalizedJobSkill = jobSkill.toLowerCase();
+    const fragments = splitCompoundSkill(jobSkill);
+    let bestWeight = 0;
 
-    // Check for exact match
-    if (userSkillNames.includes(normalizedJobSkill)) {
-      matchCount++;
-      continue;
+    for (const fragment of fragments) {
+      if (fragment.length < 2) continue;
+
+      // 1. Exact match against skill names (100%)
+      if (skillNames.includes(fragment)) {
+        bestWeight = Math.max(bestWeight, 1.0);
+        continue;
+      }
+
+      // 2. Partial match against skill names (80%)
+      const partialSkillMatch = skillNames.some(
+        (userSkill) =>
+          userSkill.includes(fragment) ||
+          fragment.includes(userSkill)
+      );
+      if (partialSkillMatch) {
+        bestWeight = Math.max(bestWeight, 0.8);
+        continue;
+      }
+
+      // 3. Semantic similarity against skill names (60%)
+      if (checkSemanticSimilarity(fragment, skillNames)) {
+        bestWeight = Math.max(bestWeight, 0.6);
+        continue;
+      }
+
+      // 4. Match against experience texts (50% - reduced weight for sentence matching)
+      if (fragment.length >= 4) {
+        const expMatch = experienceTexts.some(
+          (text) => text.includes(fragment)
+        );
+        if (expMatch) {
+          bestWeight = Math.max(bestWeight, 0.5);
+          continue;
+        }
+      }
+
+      // 5. Semantic similarity against experience texts (40%)
+      if (checkSemanticSimilarity(fragment, experienceTexts)) {
+        bestWeight = Math.max(bestWeight, 0.4);
+      }
     }
 
-    // Check for partial match (e.g., "React.js" matches "React")
-    const partialMatch = userSkillNames.some(
-      (userSkill) =>
-        userSkill.includes(normalizedJobSkill) ||
-        normalizedJobSkill.includes(userSkill)
-    );
-
-    if (partialMatch) {
-      matchCount += 0.8; // Partial matches count as 80%
-      continue;
-    }
-
-    // Check for semantic similarity (basic)
-    const semanticMatch = checkSemanticSimilarity(normalizedJobSkill, userSkillNames);
-    if (semanticMatch) {
-      matchCount += 0.6; // Semantic matches count as 60%
-    }
+    matchCount += bestWeight;
   }
 
   return Math.round((matchCount / jobSkills.length) * 100);
 }
 
-// Basic semantic similarity check
-function checkSemanticSimilarity(skill: string, userSkills: string[]): boolean {
-  // Common skill equivalences
+// Semantic similarity check with cross-language equivalences
+function checkSemanticSimilarity(skill: string, texts: string[]): boolean {
   const equivalences: Record<string, string[]> = {
+    // Tech
     javascript: ['js', 'ecmascript', 'es6', 'es2015'],
     typescript: ['ts'],
     react: ['reactjs', 'react.js'],
@@ -172,13 +231,28 @@ function checkSemanticSimilarity(skill: string, userSkills: string[]): boolean {
     cd: ['continuous deployment', 'continuous delivery'],
     agile: ['scrum', 'kanban'],
     sql: ['mysql', 'postgresql', 'sqlite'],
+    // Hospitality / Service (FR ↔ EN)
+    barman: ['bartender', 'mixologue', 'mixologist', 'bar service', 'service au bar', 'service de bar'],
+    serveur: ['server', 'waiter', 'waitress', 'service en salle', 'table service'],
+    caisse: ['cashier', 'encaissement', 'cash handling', 'caissier', 'tenue de caisse'],
+    cocktails: ['mixologie', 'cocktail preparation', 'préparation de cocktails', 'préparation de boissons'],
+    accueil: ['reception', 'customer welcome', 'accueil des clients', 'greeting'],
+    vente: ['sales', 'selling', 'commercial'],
+    cuisine: ['cooking', 'chef', 'cuisinier', 'préparation culinaire'],
+    nettoyage: ['cleaning', 'entretien', 'housekeeping', 'hygiène'],
+    commande: ['order', 'prise de commande', 'order taking', 'préparation de commande'],
+    stock: ['inventory', 'gestion des stocks', 'stock management', 'approvisionnement'],
+    // General (FR ↔ EN)
+    management: ['gestion', 'encadrement', 'supervision', 'responsable'],
+    communication: ['relation client', 'customer relations', 'interpersonal'],
+    teamwork: ['travail en équipe', 'esprit d\'équipe', 'team spirit', 'collaboration'],
   };
 
   for (const [key, aliases] of Object.entries(equivalences)) {
     const allTerms = [key, ...aliases];
-    if (allTerms.includes(skill)) {
-      return userSkills.some((userSkill) =>
-        allTerms.some((term) => userSkill.includes(term))
+    if (allTerms.some(term => skill.includes(term) || term.includes(skill))) {
+      return texts.some((text) =>
+        allTerms.some((term) => text.includes(term))
       );
     }
   }
@@ -254,6 +328,37 @@ export function calculateOverallScore(
 }
 
 // ============================================
+// RED FLAG DISMISSAL RECALCULATION
+// ============================================
+
+export function recalculateWithDismissals(
+  baseScore: number,
+  redFlags: string[],
+  dismissedFlags: string[],
+  salaryBelowMin: boolean
+): number {
+  let bonus = 0;
+
+  for (const flag of dismissedFlags) {
+    if (!redFlags.includes(flag)) continue;
+
+    const lower = flag.toLowerCase();
+    if (lower.includes('salary') || lower.includes('salaire') || lower.includes('income') || lower.includes('rémunération') || lower.includes('reduction')) {
+      // Salary-related: restore salary component from 50% to 100%
+      if (salaryBelowMin) bonus += 15;
+    } else if (lower.includes('skill') || lower.includes('compétence') || lower.includes('gap') || lower.includes('experience') || lower.includes('expérience')) {
+      bonus += 5;
+    } else if (lower.includes('career') || lower.includes('carrière') || lower.includes('change') || lower.includes('transition')) {
+      bonus += 5;
+    } else {
+      bonus += 3;
+    }
+  }
+
+  return Math.min(100, baseScore + bonus);
+}
+
+// ============================================
 // MAIN ANALYSIS FUNCTION
 // ============================================
 
@@ -274,15 +379,18 @@ export async function analyzeJob(
 
   // Step 2: Calculate skills match
   const jobSkills = [...(job.requiredSkills || []), ...(job.niceToHaveSkills || [])];
-  const skillsMatchPercent = calculateSkillsMatch(jobSkills, userProfile.skills);
+  const skillsMatchPercent = calculateSkillsMatch(jobSkills, userProfile.skills, userProfile.workExperience);
 
   // Step 3: Calculate perks match
   const perksMatchCount = calculatePerksMatch(job.perks || [], preferences.preferredPerks);
 
   // Step 4: Calculate overall score
   const hasSalaryInfo = job.salaryMin != null || job.salaryMax != null;
+  const effectiveMax = job.salaryMax != null && job.salaryRateType === 'monthly'
+    ? job.salaryMax * 12
+    : job.salaryMax;
   const meetsMinSalary = !preferences.minSalary ||
-    (job.salaryMax != null && job.salaryMax >= preferences.minSalary);
+    (effectiveMax != null && effectiveMax >= preferences.minSalary);
 
   const overallScore = calculateOverallScore(
     skillsMatchPercent,
@@ -303,8 +411,8 @@ export async function analyzeJob(
     perksMatchCount,
     overallScore,
     blockerResult,
-    matchedSkills: getMatchedSkills(jobSkills, userProfile.skills),
-    missingSkills: getMissingSkills(jobSkills, userProfile.skills),
+    matchedSkills: getMatchedSkills(jobSkills, userProfile.skills, userProfile.workExperience),
+    missingSkills: getMissingSkills(jobSkills, userProfile.skills, userProfile.workExperience),
   };
 
   const aiInsights = await generateInsights(job, userProfile, matchData);
@@ -316,6 +424,8 @@ export async function analyzeJob(
     perksMatchCount,
     overallScore,
     aiInsights,
+    matchedSkills: matchData.matchedSkills,
+    missingSkills: matchData.missingSkills,
   };
 }
 
@@ -332,28 +442,20 @@ export interface MatchData {
   missingSkills: string[];
 }
 
-function getMatchedSkills(jobSkills: string[], userSkills: Skill[]): string[] {
-  const userSkillNames = userSkills.map((s) => s.name.toLowerCase());
+function getMatchedSkills(jobSkills: string[], userSkills: Skill[], workExperience?: WorkExperience[]): string[] {
+  const { skillNames, experienceTexts } = buildProfileTexts(userSkills, workExperience);
+  const allTexts = [...skillNames, ...experienceTexts];
   return jobSkills.filter((skill) => {
-    const normalizedSkill = skill.toLowerCase();
-    return userSkillNames.some(
-      (userSkill) =>
-        userSkill.includes(normalizedSkill) ||
-        normalizedSkill.includes(userSkill)
+    const fragments = splitCompoundSkill(skill);
+    return fragments.some(fragment =>
+      fragment.length >= 2 && allTexts.some(text => text.includes(fragment) || fragment.includes(text))
     );
   });
 }
 
-function getMissingSkills(jobSkills: string[], userSkills: Skill[]): string[] {
-  const userSkillNames = userSkills.map((s) => s.name.toLowerCase());
-  return jobSkills.filter((skill) => {
-    const normalizedSkill = skill.toLowerCase();
-    return !userSkillNames.some(
-      (userSkill) =>
-        userSkill.includes(normalizedSkill) ||
-        normalizedSkill.includes(userSkill)
-    );
-  });
+function getMissingSkills(jobSkills: string[], userSkills: Skill[], workExperience?: WorkExperience[]): string[] {
+  const matched = getMatchedSkills(jobSkills, userSkills, workExperience);
+  return jobSkills.filter(skill => !matched.includes(skill));
 }
 
 function formatCurrency(amount: number, currency: string): string {

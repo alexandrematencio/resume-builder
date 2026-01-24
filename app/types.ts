@@ -343,7 +343,7 @@ export interface RoleProfile {
 
 export type RemotePreference = 'full_remote' | 'hybrid' | 'on_site' | 'any';
 export type PresenceType = 'full_remote' | 'hybrid' | 'on_site';
-export type SalaryRateType = 'annual' | 'hourly' | 'daily';
+export type SalaryRateType = 'annual' | 'monthly' | 'hourly' | 'daily';
 export type JobOfferStatus = 'new' | 'analyzed' | 'saved' | 'applied' | 'rejected' | 'archived';
 export type FeedbackType = 'helpful' | 'not_helpful' | 'wrong_score' | 'good_match' | 'bad_match';
 export type UserAction = 'saved' | 'applied' | 'dismissed' | 'ignored';
@@ -438,6 +438,9 @@ export interface JobOffer {
   perksMatchCount: number | null;
   overallScore: number | null;
   aiInsights: AIInsights | null;
+  matchedSkills: string[];
+  missingSkills: string[];
+  dismissedRedFlags: string[];
 
   // Status
   status: JobOfferStatus;
@@ -454,6 +457,8 @@ export interface JobAnalysisResult {
   perksMatchCount: number;
   overallScore: number;
   aiInsights: AIInsights;
+  matchedSkills: string[];
+  missingSkills: string[];
 }
 
 export interface JobAnalysisFeedback {
@@ -473,6 +478,23 @@ export interface JobOfferFilters {
   search?: string;
   sortBy?: 'score' | 'date' | 'company';
   sortOrder?: 'asc' | 'desc';
+}
+
+export interface ParsedJobContext {
+  title: string | null;
+  company: string | null;
+  location: string | null;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  salaryCurrency: string | null;
+  presenceType: PresenceType | null;
+  contractType: string | null;
+  requiredSkills: string[];
+  niceToHaveSkills: string[];
+  perks: string[];
+  matchedSkills: string[];
+  missingSkills: string[];
+  skillsMatchPercent: number;
 }
 
 // Common perk options for UI

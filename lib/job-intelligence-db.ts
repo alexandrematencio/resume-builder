@@ -265,6 +265,9 @@ export async function saveJobOffer(offer: Partial<JobOffer>): Promise<JobOffer |
     perks_match_count: toIntOrNull(offer.perksMatchCount),
     overall_score: toIntOrNull(offer.overallScore),
     ai_insights: offer.aiInsights || null,
+    matched_skills: offer.matchedSkills || [],
+    missing_skills: offer.missingSkills || [],
+    dismissed_red_flags: offer.dismissedRedFlags || [],
     status: offer.status || 'new',
     analyzed_at: offer.analyzedAt || null,
     updated_at: new Date().toISOString(),
@@ -327,6 +330,9 @@ export async function updateJobOffer(id: string, updates: Partial<JobOffer>): Pr
   if (updates.perksMatchCount !== undefined) updateData.perks_match_count = updates.perksMatchCount;
   if (updates.overallScore !== undefined) updateData.overall_score = updates.overallScore;
   if (updates.aiInsights !== undefined) updateData.ai_insights = updates.aiInsights;
+  if (updates.matchedSkills !== undefined) updateData.matched_skills = updates.matchedSkills;
+  if (updates.missingSkills !== undefined) updateData.missing_skills = updates.missingSkills;
+  if (updates.dismissedRedFlags !== undefined) updateData.dismissed_red_flags = updates.dismissedRedFlags;
   if (updates.status !== undefined) updateData.status = updates.status;
   if (updates.analyzedAt !== undefined) updateData.analyzed_at = updates.analyzedAt;
 
@@ -431,6 +437,9 @@ function mapDbToJobOffer(data: any): JobOffer {
     perksMatchCount: data.perks_match_count,
     overallScore: data.overall_score,
     aiInsights: data.ai_insights as AIInsights | null,
+    matchedSkills: data.matched_skills || [],
+    missingSkills: data.missing_skills || [],
+    dismissedRedFlags: data.dismissed_red_flags || [],
     status: data.status as JobOfferStatus,
     createdAt: data.created_at,
     updatedAt: data.updated_at,

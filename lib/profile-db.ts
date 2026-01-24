@@ -362,7 +362,7 @@ export async function incrementRoleProfileUsage(roleProfileId: string): Promise<
 
 export function isProfileComplete(profile: UserProfile | null): boolean {
   if (!profile) return false;
-  return profile.profileCompleteness >= 80;
+  return profile.profileCompleteness >= 85;
 }
 
 export function getMissingProfileFields(profile: UserProfile | null): string[] {

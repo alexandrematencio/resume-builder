@@ -233,11 +233,11 @@ export default function EducationForm({ onSaveStart, onSaveSuccess, onSaveError 
         />
       )}
 
-      {/* Add/Edit Form */}
-      {isAdding && (
+      {/* Add Form (new item only) */}
+      {isAdding && !editingId && (
         <div className="bg-primary-50 dark:bg-primary-700/30 rounded-xl p-6 mb-6 border border-primary-200 dark:border-primary-600">
           <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-4">
-            {editingId ? 'Edit Education' : 'New Education'}
+            New Education
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -383,40 +383,178 @@ export default function EducationForm({ onSaveStart, onSaveSuccess, onSaveError 
           </div>
         ) : (
           educations.map((edu) => (
-            <div
-              key={edu.id}
-              className="bg-primary-50 dark:bg-primary-700/20 rounded-xl p-4 border border-primary-200 dark:border-primary-700 hover:border-primary-300 dark:hover:border-primary-600 transition-colors"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold text-primary-900 dark:text-primary-50">{edu.degree}</h3>
-                  <p className="text-primary-600 dark:text-primary-400 text-sm">{edu.institution}</p>
-                  <p className="text-primary-500 dark:text-primary-500 text-sm">{edu.field}</p>
-                  <p className="text-primary-500 dark:text-primary-500 text-sm">
-                    {edu.startYear} - {edu.current ? 'Present' : edu.endYear}
-                    {edu.gpa && ` | ${edu.gpa}`}
-                  </p>
-                  {edu.honors && (
-                    <p className="text-accent-600 dark:text-accent-400 text-sm mt-1">{edu.honors}</p>
-                  )}
+            <div key={edu.id}>
+              {isAdding && editingId === edu.id ? (
+                <div className="bg-primary-50 dark:bg-primary-700/30 rounded-xl p-6 border border-accent-300 dark:border-accent-600">
+                  <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-4">
+                    Edit Education
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                        Degree <span className="text-error-500">*</span>
+                      </label>
+                      <select
+                        value={formData.degree}
+                        onChange={(e) => setFormData({ ...formData, degree: e.target.value })}
+                        className="select-primary"
+                      >
+                        <option value="">Select...</option>
+                        {degreeOptions.map((degree) => (
+                          <option key={degree} value={degree}>
+                            {degree}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                        Institution <span className="text-error-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.institution}
+                        onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
+                        className="input-primary"
+                        placeholder="Stanford University"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                        Field of Study <span className="text-error-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.field}
+                        onChange={(e) => setFormData({ ...formData, field: e.target.value })}
+                        className="input-primary"
+                        placeholder="Computer Science, Business, Marketing..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                        Start Year <span className="text-error-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.startYear}
+                        onChange={(e) => setFormData({ ...formData, startYear: e.target.value })}
+                        className="input-primary"
+                        placeholder="2020"
+                        min="1950"
+                        max="2030"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                        End Year
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.endYear}
+                        onChange={(e) => setFormData({ ...formData, endYear: e.target.value })}
+                        disabled={formData.current}
+                        className="input-primary disabled:opacity-50"
+                        placeholder="2024"
+                        min="1950"
+                        max="2030"
+                      />
+                    </div>
+
+                    <div className="flex items-center">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.current}
+                          onChange={(e) => setFormData({ ...formData, current: e.target.checked })}
+                          className="w-4 h-4 rounded border-primary-300 dark:border-primary-600 bg-white dark:bg-primary-800 text-accent-600 focus:ring-accent-500"
+                        />
+                        <span className="text-sm text-primary-700 dark:text-primary-300">Currently studying</span>
+                      </label>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                        GPA / Honors
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.gpa}
+                        onChange={(e) => setFormData({ ...formData, gpa: e.target.value })}
+                        className="input-primary"
+                        placeholder="3.8/4.0, Cum Laude..."
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                        Awards / Distinctions
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.honors}
+                        onChange={(e) => setFormData({ ...formData, honors: e.target.value })}
+                        className="input-primary"
+                        placeholder="Valedictorian, Dean's List..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={handleCancel}
+                      className="btn-ghost"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      disabled={!formData.degree || !formData.institution || !formData.field || !formData.startYear}
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Update
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(edu)}
-                    className="p-2 text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
-                    aria-label="Edit education"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(edu.id)}
-                    className="p-2 text-primary-500 dark:text-primary-400 hover:text-error-600 dark:hover:text-error-400 transition-colors"
-                    aria-label="Delete education"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+              ) : (
+                <div className="bg-primary-50 dark:bg-primary-700/20 rounded-xl p-4 border border-primary-200 dark:border-primary-700 hover:border-primary-300 dark:hover:border-primary-600 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="font-semibold text-primary-900 dark:text-primary-50">{edu.degree}</h3>
+                      <p className="text-primary-600 dark:text-primary-400 text-sm">{edu.institution}</p>
+                      <p className="text-primary-500 dark:text-primary-500 text-sm">{edu.field}</p>
+                      <p className="text-primary-500 dark:text-primary-500 text-sm">
+                        {edu.startYear} - {edu.current ? 'Present' : edu.endYear}
+                        {edu.gpa && ` | ${edu.gpa}`}
+                      </p>
+                      {edu.honors && (
+                        <p className="text-accent-600 dark:text-accent-400 text-sm mt-1">{edu.honors}</p>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEdit(edu)}
+                        className="p-2 text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors"
+                        aria-label="Edit education"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(edu.id)}
+                        className="p-2 text-primary-500 dark:text-primary-400 hover:text-error-600 dark:hover:text-error-400 transition-colors"
+                        aria-label="Delete education"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ))
         )}

@@ -15,8 +15,12 @@ import {
   Sliders,
   Loader2,
   Check,
-  X
+  X,
+  Download,
+  FileText,
+  FileDown,
 } from 'lucide-react';
+import jsPDF from 'jspdf';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useProfile } from '@/app/contexts/ProfileContext';
 import { ThemeToggle } from '@/app/components/ThemeToggle';
@@ -67,6 +71,7 @@ function AccountPageContent() {
   const { profile, profileLoading, isComplete, missingFields } = useProfile();
   const [activeTab, setActiveTab] = useState<TabId>('core');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -97,6 +102,201 @@ function AccountPageContent() {
   const handleSaveError = () => {
     setSaveStatus('error');
     setTimeout(() => setSaveStatus('idle'), 3000);
+  };
+
+  const generateProfileText = (): string => {
+    if (!profile) return '';
+    const lines: string[] = [];
+
+    // Personal Info
+    if (profile.fullName) lines.push(profile.fullName);
+    const contactParts: string[] = [];
+    if (profile.email) contactParts.push(profile.email);
+    if (profile.phone) contactParts.push(profile.phone);
+    if (contactParts.length > 0) lines.push(contactParts.join(' | '));
+    const locationParts: string[] = [];
+    if (profile.city) locationParts.push(profile.city);
+    if (profile.country) locationParts.push(profile.country);
+    if (locationParts.length > 0) lines.push(locationParts.join(', '));
+    if (profile.portfolioLinks?.length > 0) {
+      lines.push(profile.portfolioLinks.map(l => l.url).join(' | '));
+    }
+
+    // Professional Summary
+    if (profile.professionalSummary) {
+      lines.push('', '--- PROFESSIONAL SUMMARY ---', '', profile.professionalSummary);
+    }
+
+    // Work Experience
+    if (profile.workExperience?.length > 0) {
+      lines.push('', '--- WORK EXPERIENCE ---');
+      for (const exp of profile.workExperience) {
+        lines.push('');
+        lines.push(`${exp.title} at ${exp.company}`);
+        const dates = `${exp.startDate || '?'} - ${exp.current ? 'Present' : exp.endDate || '?'}`;
+        lines.push(dates + (exp.location ? ` | ${exp.location}` : ''));
+        if (exp.achievements?.length > 0) {
+          for (const ach of exp.achievements) {
+            if (ach.trim()) lines.push(`  - ${ach}`);
+          }
+        }
+      }
+    }
+
+    // Education
+    if (profile.education?.length > 0) {
+      lines.push('', '--- EDUCATION ---');
+      for (const edu of profile.education) {
+        lines.push('');
+        lines.push(`${edu.degree}${edu.field ? ` in ${edu.field}` : ''}`);
+        lines.push(`${edu.institution} | ${edu.startYear || '?'} - ${edu.current ? 'Present' : edu.endYear || '?'}`);
+        if (edu.gpa) lines.push(`GPA: ${edu.gpa}`);
+        if (edu.honors) lines.push(`Honors: ${edu.honors}`);
+      }
+    }
+
+    // Skills
+    if (profile.skills?.length > 0) {
+      lines.push('', '--- SKILLS ---');
+      const byCategory: Record<string, string[]> = {};
+      for (const skill of profile.skills) {
+        const cat = skill.category || 'other';
+        if (!byCategory[cat]) byCategory[cat] = [];
+        byCategory[cat].push(skill.name + (skill.proficiency ? ` (${skill.proficiency})` : ''));
+      }
+      for (const [cat, skills] of Object.entries(byCategory)) {
+        lines.push(`${cat.charAt(0).toUpperCase() + cat.slice(1)}: ${skills.join(', ')}`);
+      }
+    }
+
+    // Languages
+    if (profile.languages?.length > 0) {
+      lines.push('', '--- LANGUAGES ---');
+      lines.push(profile.languages.map(l => `${l.language} (${l.proficiency})`).join(', '));
+    }
+
+    // Certifications
+    if (profile.certifications?.length > 0) {
+      lines.push('', '--- CERTIFICATIONS ---');
+      for (const cert of profile.certifications) {
+        lines.push(`${cert.name}${cert.issuer ? ` - ${cert.issuer}` : ''}${cert.date ? ` (${cert.date})` : ''}`);
+      }
+    }
+
+    return lines.join('\n');
+  };
+
+  const handleDownloadTxt = () => {
+    const text = generateProfileText();
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${profile?.fullName || 'profile'}_CV.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setShowDownloadMenu(false);
+  };
+
+  const handleDownloadPdf = () => {
+    if (!profile) return;
+    const doc = new jsPDF();
+    const margin = 20;
+    let y = margin;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const maxWidth = pageWidth - margin * 2;
+
+    const addText = (text: string, size: number, bold = false) => {
+      doc.setFontSize(size);
+      doc.setFont('helvetica', bold ? 'bold' : 'normal');
+      const lines = doc.splitTextToSize(text, maxWidth);
+      for (const line of lines) {
+        if (y > 270) { doc.addPage(); y = margin; }
+        doc.text(line, margin, y);
+        y += size * 0.5;
+      }
+    };
+
+    const addSection = (title: string) => {
+      y += 4;
+      if (y > 260) { doc.addPage(); y = margin; }
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text(title, margin, y);
+      y += 2;
+      doc.setDrawColor(100);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 6;
+    };
+
+    // Header
+    if (profile.fullName) { addText(profile.fullName, 18, true); y += 2; }
+    const contact: string[] = [];
+    if (profile.email) contact.push(profile.email);
+    if (profile.phone) contact.push(profile.phone);
+    if (contact.length > 0) { addText(contact.join('  |  '), 9); }
+    const loc: string[] = [];
+    if (profile.city) loc.push(profile.city);
+    if (profile.country) loc.push(profile.country);
+    if (loc.length > 0) { addText(loc.join(', '), 9); }
+    y += 4;
+
+    // Professional Summary
+    if (profile.professionalSummary) {
+      addSection('PROFESSIONAL SUMMARY');
+      addText(profile.professionalSummary, 9);
+    }
+
+    // Work Experience
+    if (profile.workExperience?.length > 0) {
+      addSection('WORK EXPERIENCE');
+      for (const exp of profile.workExperience) {
+        addText(`${exp.title} at ${exp.company}`, 10, true);
+        const dates = `${exp.startDate || '?'} - ${exp.current ? 'Present' : exp.endDate || '?'}`;
+        addText(dates + (exp.location ? `  |  ${exp.location}` : ''), 8);
+        if (exp.achievements?.length > 0) {
+          for (const ach of exp.achievements) {
+            if (ach.trim()) addText(`  •  ${ach}`, 8);
+          }
+        }
+        y += 3;
+      }
+    }
+
+    // Education
+    if (profile.education?.length > 0) {
+      addSection('EDUCATION');
+      for (const edu of profile.education) {
+        addText(`${edu.degree}${edu.field ? ` in ${edu.field}` : ''}`, 10, true);
+        addText(`${edu.institution}  |  ${edu.startYear || '?'} - ${edu.current ? 'Present' : edu.endYear || '?'}`, 8);
+        y += 3;
+      }
+    }
+
+    // Skills
+    if (profile.skills?.length > 0) {
+      addSection('SKILLS');
+      const byCategory: Record<string, string[]> = {};
+      for (const skill of profile.skills) {
+        const cat = skill.category || 'other';
+        if (!byCategory[cat]) byCategory[cat] = [];
+        byCategory[cat].push(skill.name);
+      }
+      for (const [cat, skills] of Object.entries(byCategory)) {
+        addText(`${cat.charAt(0).toUpperCase() + cat.slice(1)}: ${skills.join(', ')}`, 9);
+      }
+    }
+
+    // Languages
+    if (profile.languages?.length > 0) {
+      addSection('LANGUAGES');
+      addText(profile.languages.map(l => `${l.language} (${l.proficiency})`).join(', '), 9);
+    }
+
+    doc.save(`${profile.fullName || 'profile'}_CV.pdf`);
+    setShowDownloadMenu(false);
   };
 
   const renderTabContent = () => {
@@ -180,9 +380,9 @@ function AccountPageContent() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => router.push('/')}
+                onClick={() => router.back()}
                 className="text-primary-500 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-200 transition-colors p-2 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-700"
-                aria-label="Back to dashboard"
+                aria-label="Go back"
               >
                 <ArrowLeft className="w-5 h-5" aria-hidden="true" />
               </button>
@@ -316,6 +516,35 @@ function AccountPageContent() {
                   </button>
                 ))}
               </nav>
+
+              {/* Download Button */}
+              <div className="mt-6 pt-4 border-t border-primary-200 dark:border-primary-700 relative">
+                <button
+                  onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary-700 dark:text-primary-300 bg-primary-100 dark:bg-primary-700 hover:bg-primary-200 dark:hover:bg-primary-600 rounded-lg transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Profile
+                </button>
+                {showDownloadMenu && (
+                  <div className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-primary-800 border border-primary-200 dark:border-primary-700 rounded-lg shadow-lg overflow-hidden z-20">
+                    <button
+                      onClick={handleDownloadTxt}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-700 transition-colors"
+                    >
+                      <FileText className="w-4 h-4 text-primary-500" />
+                      TXT format
+                    </button>
+                    <button
+                      onClick={handleDownloadPdf}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-700 transition-colors border-t border-primary-100 dark:border-primary-700"
+                    >
+                      <FileDown className="w-4 h-4 text-primary-500" />
+                      PDF format
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </aside>
 

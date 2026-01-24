@@ -1,7 +1,44 @@
 # PRD – CareerTech Platform
 
 > Product Requirements Document
-> Version 1.1 | January 2026
+> Version 1.2 | Last updated: 2026-01-24
+
+---
+
+## Core Offering
+
+### What Makes CareerTech Unique
+
+CareerTech is **not** a job board. It is **not** an application tracker. It is an **AI-powered job evaluation and application preparation platform** that answers one question before any other:
+
+> **"Is this job worth my time?"**
+
+### The Three Pillars
+
+| Pillar | Description | Status |
+|--------|-------------|--------|
+| **1. AI Profile-to-Job Matching** | Import any job description. AI scores it against your profile — skills match, salary fit, location, remote policy, perks. Hard blockers are surfaced. A match score (0-100) tells you at a glance if it's worth pursuing. | ✅ Live |
+| **2. AI Document Generation** | Your profile + job requirements = tailored CV and cover letter per application. AI restructures your experience to highlight what matters most for each role. Multiple styles (french formal, american creative, etc.). | ✅ Live |
+| **3. Complete Application Pipeline** | From job evaluation → application creation → interview tracking → offer/rejection. One tool for the entire lifecycle. | ✅ Live |
+
+### What We Are NOT
+
+- Not a job board (we don't source jobs — the user imports them)
+- Not volume-driven (quality of match over quantity of applications)
+- Not a black box (every score is transparent, every suggestion is editable)
+- Not addictive (no gamification, no FOMO, no streak counters)
+
+### Differentiation vs Competitors
+
+| | CareerTech | Huntr | Teal | LinkedIn |
+|--|-----------|-------|------|----------|
+| Job evaluation before applying | ✅ AI matching + blockers | ❌ | Partial | ❌ |
+| Skills gap analysis | ✅ Per job | ❌ | Partial | ❌ |
+| AI CV tailoring per job | ✅ | ❌ | ✅ | ❌ |
+| Cover letter generation | ✅ Multi-style | ❌ | ✅ | ❌ |
+| Salary/location hard blockers | ✅ | ❌ | ❌ | ❌ |
+| Role-specific profiles | ✅ | ❌ | ❌ | ❌ |
+| Anti-addiction by design | ✅ | ❌ | ❌ | ❌ |
 
 ---
 
@@ -139,7 +176,7 @@
 
 ---
 
-## Phase 2 – Job Intelligence Engine (In Progress)
+## Phase 2 – Job Intelligence Engine (Complete)
 
 ### 2.1 Overview
 
@@ -515,6 +552,33 @@ User Profile (Supabase)     Job Description (User Input)
 
 ---
 
+## Recent Changes (January 2026)
+
+### Navigation & Information Architecture
+- Section "Jobs" renamed to **"Matching"** with `Target` icon (was `Briefcase`)
+- Empty state onboarding copy updated: "Evaluate jobs before you apply."
+- Stat card: "Total Jobs" → "Imported"
+- Account back button: uses `router.back()` (context-aware) instead of hardcoded `/`
+
+### Landing Page Overhaul
+- Hero: "Know which jobs fit you **before you apply.**"
+- Removed all "coming soon" / "waitlist" language (Job Intelligence is live)
+- Features reordered: matching → filtering → CV → cover letters → role profiles → pipeline
+- Dark section: "Coming Soon" → "Core Feature" highlight
+- How It Works: 3 steps → 4 steps (includes matching flow)
+- CTA: "Stop guessing. Start matching."
+- Removed fake social proof
+
+### Interview Filter Fix
+- Applications with status `offer`, `rejected`, or `closed` are now excluded from the Interview filter tab and stat count (previously they lingered if `interviewScheduled` was set)
+
+### Job Analysis Improvements
+- Cross-language skill matching (French ↔ English equivalents)
+- Work experience achievements used as evidence of skills
+- AI insights include: strengths, skill gaps, strategic advice, culture fit, growth potential, red flags
+
+---
+
 *Document maintained by the CareerTech Product Team*
-*Last updated: January 2026*
+*Last updated: 2026-01-24*
 

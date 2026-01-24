@@ -6,13 +6,11 @@ import {
   Briefcase,
   FileText,
   Sparkles,
-  RefreshCw,
   Filter,
   Target,
   CheckCircle,
   ArrowRight,
   Zap,
-  Shield,
   Clock
 } from 'lucide-react';
 
@@ -60,21 +58,21 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left: Copy */}
             <div>
-              {/* Badge "Coming Soon" */}
+              {/* Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-50 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300 rounded-full text-sm font-medium mb-6">
                 <Sparkles className="w-4 h-4" />
-                AI-powered job tracking coming soon
+                AI-powered matching
               </div>
 
               <h1 className="text-4xl lg:text-5xl font-semibold text-primary-900 dark:text-primary-50 leading-tight mb-6">
-                Track applications.
+                Know which jobs fit you
                 <br />
-                <span className="text-accent-600 dark:text-accent-400">Land interviews.</span>
+                <span className="text-accent-600 dark:text-accent-400">before you apply.</span>
               </h1>
 
               <p className="text-lg text-primary-600 dark:text-primary-400 mb-8 leading-relaxed">
-                Stop losing track of where you applied. AppTracker helps you manage job applications,
-                generate tailored CVs, and soon — discover opportunities matched to your profile.
+                Import any job description. AI scores it against your profile — skills match,
+                salary fit, blockers. Then generates a tailored CV and cover letter in seconds.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -87,16 +85,9 @@ export default function LandingPage() {
                 </Link>
               </div>
 
-              {/* Social proof */}
-              <div className="mt-10 flex items-center gap-4 text-sm text-primary-500 dark:text-primary-400">
-                <div className="flex -space-x-2">
-                  {/* Placeholder avatars */}
-                  <div className="w-8 h-8 rounded-full bg-primary-300 dark:bg-primary-600 border-2 border-white dark:border-primary-900"></div>
-                  <div className="w-8 h-8 rounded-full bg-primary-400 dark:bg-primary-500 border-2 border-white dark:border-primary-900"></div>
-                  <div className="w-8 h-8 rounded-full bg-accent-400 border-2 border-white dark:border-primary-900"></div>
-                </div>
-                <span>Join 500+ job seekers tracking smarter</span>
-              </div>
+              <p className="mt-10 text-sm text-primary-500 dark:text-primary-400">
+                Free to use. No credit card required.
+              </p>
             </div>
 
             {/* Right: Hero Image Placeholder */}
@@ -115,15 +106,15 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </div>
-                {/* Placeholder for dashboard screenshot */}
+                {/* Placeholder for matching dashboard screenshot */}
                 <div className="aspect-[4/3] bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800 dark:to-primary-900 p-6 flex items-center justify-center">
                   <div className="text-center">
-                    <Briefcase className="w-16 h-16 text-primary-400 dark:text-primary-600 mx-auto mb-4" />
+                    <Target className="w-16 h-16 text-primary-400 dark:text-primary-600 mx-auto mb-4" />
                     <p className="text-sm text-primary-500 dark:text-primary-400 font-medium">
-                      Dashboard Screenshot
+                      Matching Dashboard
                     </p>
                     <p className="text-xs text-primary-400 dark:text-primary-500 mt-1">
-                      Replace with: Full dashboard view showing application list with status badges
+                      Replace with: Job intelligence view showing match score, skills overlap, and insights
                     </p>
                   </div>
                 </div>
@@ -136,8 +127,8 @@ export default function LandingPage() {
                     <Target className="w-5 h-5 text-success-600 dark:text-success-400" />
                   </div>
                   <div>
-                    <p className="text-2xl font-semibold text-primary-900 dark:text-primary-50">23%</p>
-                    <p className="text-xs text-primary-500 dark:text-primary-400">Interview rate</p>
+                    <p className="text-2xl font-semibold text-primary-900 dark:text-primary-50">87%</p>
+                    <p className="text-xs text-primary-500 dark:text-primary-400">Skills match</p>
                   </div>
                 </div>
               </div>
@@ -151,111 +142,110 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-semibold text-primary-900 dark:text-primary-50 mb-4">
-              Everything you need to manage your job search
+              Intelligent tools for a focused job search
             </h2>
             <p className="text-primary-600 dark:text-primary-400 max-w-2xl mx-auto">
-              From tracking applications to generating tailored CVs, AppTracker streamlines your entire job search workflow.
+              From evaluating fit to generating documents, every step is informed by AI analysis of your profile.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Feature 1 */}
+            {/* Feature 1 - Profile-to-Job Matching */}
+            <div className="p-6 rounded-xl bg-primary-50 dark:bg-primary-800/50 border border-primary-100 dark:border-primary-700">
+              <div className="w-12 h-12 bg-accent-100 dark:bg-accent-900/30 rounded-lg flex items-center justify-center mb-4">
+                <Target className="w-6 h-6 text-accent-600 dark:text-accent-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2">
+                Profile-to-Job Matching
+              </h3>
+              <p className="text-primary-600 dark:text-primary-400 text-sm leading-relaxed">
+                Paste a job description. AI compares requirements against your skills, experience, and preferences. See your match score instantly.
+              </p>
+            </div>
+
+            {/* Feature 2 - Intelligent Filtering */}
+            <div className="p-6 rounded-xl bg-primary-50 dark:bg-primary-800/50 border border-primary-100 dark:border-primary-700">
+              <div className="w-12 h-12 bg-info-100 dark:bg-info-900/30 rounded-lg flex items-center justify-center mb-4">
+                <Filter className="w-6 h-6 text-info-600 dark:text-info-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2">
+                Intelligent Filtering
+              </h3>
+              <p className="text-primary-600 dark:text-primary-400 text-sm leading-relaxed">
+                Jobs that don&apos;t meet your salary, location, or remote requirements are automatically flagged. Focus only on viable opportunities.
+              </p>
+            </div>
+
+            {/* Feature 3 - AI-Tailored CVs */}
+            <div className="p-6 rounded-xl bg-primary-50 dark:bg-primary-800/50 border border-primary-100 dark:border-primary-700">
+              <div className="w-12 h-12 bg-success-100 dark:bg-success-900/30 rounded-lg flex items-center justify-center mb-4">
+                <FileText className="w-6 h-6 text-success-600 dark:text-success-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2">
+                AI-Tailored CVs
+              </h3>
+              <p className="text-primary-600 dark:text-primary-400 text-sm leading-relaxed">
+                Generate a CV customized to each job&apos;s requirements. Your experience is restructured to highlight what matters most for the role.
+              </p>
+            </div>
+
+            {/* Feature 4 - Cover Letters */}
+            <div className="p-6 rounded-xl bg-primary-50 dark:bg-primary-800/50 border border-primary-100 dark:border-primary-700">
+              <div className="w-12 h-12 bg-warning-100 dark:bg-warning-900/30 rounded-lg flex items-center justify-center mb-4">
+                <Zap className="w-6 h-6 text-warning-600 dark:text-warning-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2">
+                Cover Letters in Your Style
+              </h3>
+              <p className="text-primary-600 dark:text-primary-400 text-sm leading-relaxed">
+                French formal, American creative, or anything in between. AI drafts a letter matched to the company&apos;s culture and your tone.
+              </p>
+            </div>
+
+            {/* Feature 5 - Role Profiles */}
             <div className="p-6 rounded-xl bg-primary-50 dark:bg-primary-800/50 border border-primary-100 dark:border-primary-700">
               <div className="w-12 h-12 bg-accent-100 dark:bg-accent-900/30 rounded-lg flex items-center justify-center mb-4">
                 <Briefcase className="w-6 h-6 text-accent-600 dark:text-accent-400" />
               </div>
               <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2">
-                Application Tracking
+                Role-Specific Profiles
               </h3>
               <p className="text-primary-600 dark:text-primary-400 text-sm leading-relaxed">
-                Keep all your job applications organized in one place. Track status from draft to offer with a clear visual pipeline.
+                Create distinct professional identities for different job types. Frontend, fullstack, management — each with its own summary and highlights.
               </p>
             </div>
 
-            {/* Feature 2 */}
+            {/* Feature 6 - Application Pipeline */}
             <div className="p-6 rounded-xl bg-primary-50 dark:bg-primary-800/50 border border-primary-100 dark:border-primary-700">
-              <div className="w-12 h-12 bg-info-100 dark:bg-info-900/30 rounded-lg flex items-center justify-center mb-4">
-                <FileText className="w-6 h-6 text-info-600 dark:text-info-400" />
+              <div className="w-12 h-12 bg-primary-100 dark:bg-primary-700/50 rounded-lg flex items-center justify-center mb-4">
+                <Clock className="w-6 h-6 text-primary-600 dark:text-primary-400" />
               </div>
               <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2">
-                AI-Generated CVs
+                Application Pipeline
               </h3>
               <p className="text-primary-600 dark:text-primary-400 text-sm leading-relaxed">
-                Generate tailored CVs for each application. Our AI adapts your experience to match job requirements.
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="p-6 rounded-xl bg-primary-50 dark:bg-primary-800/50 border border-primary-100 dark:border-primary-700">
-              <div className="w-12 h-12 bg-success-100 dark:bg-success-900/30 rounded-lg flex items-center justify-center mb-4">
-                <Zap className="w-6 h-6 text-success-600 dark:text-success-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2">
-                Cover Letter Generation
-              </h3>
-              <p className="text-primary-600 dark:text-primary-400 text-sm leading-relaxed">
-                Create compelling cover letters in multiple styles. French formal, American creative — you choose.
-              </p>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="p-6 rounded-xl bg-primary-50 dark:bg-primary-800/50 border border-primary-100 dark:border-primary-700">
-              <div className="w-12 h-12 bg-warning-100 dark:bg-warning-900/30 rounded-lg flex items-center justify-center mb-4">
-                <Clock className="w-6 h-6 text-warning-600 dark:text-warning-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2">
-                Interview Scheduling
-              </h3>
-              <p className="text-primary-600 dark:text-primary-400 text-sm leading-relaxed">
-                Never miss an interview. Track dates, prepare notes, and record outcomes all in one place.
-              </p>
-            </div>
-
-            {/* Feature 5 */}
-            <div className="p-6 rounded-xl bg-primary-50 dark:bg-primary-800/50 border border-primary-100 dark:border-primary-700">
-              <div className="w-12 h-12 bg-accent-100 dark:bg-accent-900/30 rounded-lg flex items-center justify-center mb-4">
-                <Shield className="w-6 h-6 text-accent-600 dark:text-accent-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2">
-                Profile Management
-              </h3>
-              <p className="text-primary-600 dark:text-primary-400 text-sm leading-relaxed">
-                Store your experience, skills, and education once. Create role-specific profiles for different job types.
-              </p>
-            </div>
-
-            {/* Feature 6 */}
-            <div className="p-6 rounded-xl bg-primary-50 dark:bg-primary-800/50 border border-primary-100 dark:border-primary-700">
-              <div className="w-12 h-12 bg-error-100 dark:bg-error-900/30 rounded-lg flex items-center justify-center mb-4">
-                <Target className="w-6 h-6 text-error-600 dark:text-error-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2">
-                Success Analytics
-              </h3>
-              <p className="text-primary-600 dark:text-primary-400 text-sm leading-relaxed">
-                Understand your job search performance. Track response rates, interview conversion, and time to offer.
+                Track every application from draft to offer. Schedule interviews, record outcomes, and see your progress at a glance.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Coming Soon Section - Job Matching */}
+      {/* Core Feature Section - Job Matching */}
       <section className="py-20 px-6 bg-gradient-to-b from-primary-900 to-primary-950">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left: Feature preview placeholder */}
             <div className="order-2 lg:order-1">
               <div className="bg-primary-800 rounded-xl border border-primary-700 overflow-hidden">
-                {/* Placeholder for job matching UI */}
                 <div className="aspect-[4/3] p-6 flex items-center justify-center">
                   <div className="text-center">
-                    <Filter className="w-16 h-16 text-accent-500 mx-auto mb-4" />
+                    <Target className="w-16 h-16 text-accent-500 mx-auto mb-4" />
                     <p className="text-sm text-primary-300 font-medium">
-                      Job Matching Interface
+                      Intelligence View
                     </p>
                     <p className="text-xs text-primary-500 mt-1 max-w-xs">
-                      Replace with: UI mockup showing filtered job listings with match scores and "Apply" CTAs
+                      Replace with: Intelligence view showing 87% match, skills comparison, and AI insights panel
                     </p>
                   </div>
                 </div>
@@ -265,43 +255,43 @@ export default function LandingPage() {
             {/* Right: Copy */}
             <div className="order-1 lg:order-2">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-900/50 text-accent-300 rounded-full text-sm font-medium mb-6">
-                <RefreshCw className="w-4 h-4" />
-                Coming Soon
+                <Sparkles className="w-4 h-4" />
+                Core Feature
               </div>
 
               <h2 className="text-3xl lg:text-4xl font-semibold text-white leading-tight mb-6">
-                AI-powered job discovery
+                AI evaluates every job against your profile
               </h2>
 
               <p className="text-lg text-primary-300 mb-8 leading-relaxed">
-                Stop endless scrolling. Our AI will analyze your profile and match you with relevant opportunities — refreshed every 6 hours from top job boards.
+                Import a job description — by URL or paste. In seconds, AI extracts requirements, compares them to your skills and preferences, and gives you a clear picture: match score, skill gaps, red flags, and strategic advice.
               </p>
 
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-success-400 mt-0.5 flex-shrink-0" />
                   <div>
-                    <span className="text-white font-medium">Smart filtering</span>
+                    <span className="text-white font-medium">Skills match analysis</span>
                     <p className="text-primary-400 text-sm mt-1">
-                      AI analyzes job requirements against your skills to show only positions you're qualified for.
+                      See exactly which of your skills align with the role&apos;s requirements, and which ones you&apos;re missing.
                     </p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-success-400 mt-0.5 flex-shrink-0" />
                   <div>
-                    <span className="text-white font-medium">Auto-refresh every 6 hours</span>
+                    <span className="text-white font-medium">Hard blockers detected</span>
                     <p className="text-primary-400 text-sm mt-1">
-                      New opportunities delivered automatically. Never miss a fresh posting.
+                      Salary below your minimum? Wrong location? Remote policy mismatch? The system tells you before you invest time.
                     </p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-success-400 mt-0.5 flex-shrink-0" />
                   <div>
-                    <span className="text-white font-medium">Match score</span>
+                    <span className="text-white font-medium">Strategic insights</span>
                     <p className="text-primary-400 text-sm mt-1">
-                      See how well each job matches your profile with a clear percentage score.
+                      AI provides culture fit assessment, growth potential, and specific advice on how to position your application.
                     </p>
                   </div>
                 </li>
@@ -311,7 +301,7 @@ export default function LandingPage() {
                 href="/signup"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-accent-600 hover:bg-accent-700 text-white font-medium rounded-lg transition-colors"
               >
-                Join the waitlist
+                Get started
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -327,7 +317,7 @@ export default function LandingPage() {
               Get started in minutes
             </h2>
             <p className="text-primary-600 dark:text-primary-400">
-              Three simple steps to take control of your job search.
+              Four steps from profile to tailored application.
             </p>
           </div>
 
@@ -339,10 +329,10 @@ export default function LandingPage() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2">
-                  Create your profile
+                  Build your profile
                 </h3>
                 <p className="text-primary-600 dark:text-primary-400">
-                  Import your existing CV or fill in your experience, skills, and education. Your profile becomes the foundation for all generated documents.
+                  Import your CV as a PDF or fill in your experience, skills, and preferences. This becomes the foundation AI uses to evaluate every job.
                 </p>
               </div>
             </div>
@@ -354,10 +344,10 @@ export default function LandingPage() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2">
-                  Add job applications
+                  Import a job description
                 </h3>
                 <p className="text-primary-600 dark:text-primary-400">
-                  Paste the job description and let AI generate a tailored CV and cover letter. Track each application's status as you progress.
+                  Paste the text or provide a URL. AI extracts the role&apos;s requirements, salary, location, and perks automatically.
                 </p>
               </div>
             </div>
@@ -369,10 +359,25 @@ export default function LandingPage() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2">
-                  Track and iterate
+                  Review your match
                 </h3>
                 <p className="text-primary-600 dark:text-primary-400">
-                  Move applications through your pipeline, schedule interviews, and analyze what's working. Improve your approach based on real data.
+                  See your overall score, skills overlap, blockers, and strategic advice. Decide in seconds whether the job is worth pursuing.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 4 */}
+            <div className="flex gap-6 items-start">
+              <div className="w-12 h-12 bg-accent-100 dark:bg-accent-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-accent-700 dark:text-accent-300 font-semibold">4</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2">
+                  Generate documents and apply
+                </h3>
+                <p className="text-primary-600 dark:text-primary-400">
+                  AI creates a tailored CV and cover letter highlighting what makes you the right fit. Track the application through your pipeline.
                 </p>
               </div>
             </div>
@@ -380,7 +385,7 @@ export default function LandingPage() {
 
           <div className="mt-12 text-center">
             <Link href="/signup" className="btn-primary btn-lg">
-              Start tracking for free
+              Start matching for free
             </Link>
           </div>
         </div>
@@ -390,10 +395,10 @@ export default function LandingPage() {
       <section className="py-20 px-6 bg-primary-50 dark:bg-primary-950">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl lg:text-4xl font-semibold text-primary-900 dark:text-primary-50 mb-6">
-            Ready to streamline your job search?
+            Stop guessing. Start matching.
           </h2>
           <p className="text-lg text-primary-600 dark:text-primary-400 mb-8">
-            Join hundreds of job seekers who've taken control of their applications. Free to start, no credit card required.
+            Build your profile once. Evaluate every opportunity with AI. Apply with confidence. Free to start, no credit card required.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/signup" className="btn-primary btn-lg">
@@ -432,7 +437,7 @@ export default function LandingPage() {
               </Link>
             </div>
             <p className="text-primary-600 text-sm">
-              2025 AppTracker. Built for job seekers.
+              2026 AppTracker. Built for job seekers.
             </p>
           </div>
         </div>

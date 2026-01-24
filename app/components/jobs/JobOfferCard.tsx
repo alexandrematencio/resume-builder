@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Clock, Building2, Briefcase, Ban, Sparkles, Star, CheckCircle, Archive } from 'lucide-react';
+import { MapPin, Clock, Building2, Briefcase, Ban, Sparkles, Star, CheckCircle, Archive, X, FileText } from 'lucide-react';
 import Link from 'next/link';
 import type { JobOffer } from '@/app/types';
 import { interpretScore } from '@/lib/job-filter-service';
@@ -10,6 +10,7 @@ interface JobOfferCardProps {
   onAnalyze?: (jobId: string) => void;
   onSave?: (jobId: string) => void;
   onDismiss?: (jobId: string) => void;
+  onApply?: (job: JobOffer) => void;
   analyzing?: boolean;
 }
 
@@ -18,6 +19,7 @@ export default function JobOfferCard({
   onAnalyze,
   onSave,
   onDismiss,
+  onApply,
   analyzing = false,
 }: JobOfferCardProps) {
   const hasScore = job.overallScore !== null;
@@ -76,16 +78,20 @@ export default function JobOfferCard({
   const isDismissed = job.status === 'rejected' || job.status === 'archived';
 
   return (
-    <div
-      className={`rounded-xl border transition-all ${
+    <article
+      aria-label={`${job.title} at ${job.company}`}
+      className={`relative rounded-xl border transition-all motion-reduce:transition-none ${
         job.isBlocked
           ? 'bg-white dark:bg-primary-800 border-error-300 dark:border-error-700 opacity-60 hover:shadow-md'
           : isArchived
           ? 'bg-primary-50/50 dark:bg-primary-900/50 border-primary-300 dark:border-primary-600 opacity-80 hover:opacity-90 hover:shadow-sm'
-          : 'bg-white dark:bg-primary-800 border-primary-200 dark:border-primary-700 hover:shadow-md'
+          : 'bg-white dark:bg-primary-800 border-primary-200 dark:border-primary-700 hover:shadow-md hover:border-primary-300 dark:hover:border-primary-600'
       }`}
     >
-      <div className="p-4">
+      <Link
+        href={`/jobs/${job.id}`}
+        className="block p-4 pb-10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 rounded-xl"
+      >
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
@@ -220,54 +226,56 @@ export default function JobOfferCard({
             </p>
           </div>
         )}
-      </div>
+      </Link>
 
-      {/* Actions */}
-      <div className="flex items-center justify-between px-4 py-3 border-t border-primary-200 dark:border-primary-700">
-        <Link
-          href={`/jobs/${job.id}`}
-          className="text-sm font-medium text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 transition-colors"
-        >
-          View Details
-        </Link>
-        <div className="flex items-center gap-2">
+      {/* Actions — icon-only, bottom-right */}
+      {((!hasScore && onAnalyze && !isArchived) || (onSave && job.status !== 'saved' && job.status !== 'applied' && job.status !== 'archived') || (onDismiss && job.status !== 'archived') || (onApply && job.status === 'saved' && hasScore)) && (
+        <div className="absolute bottom-3 right-3 flex items-center gap-1 z-10">
+          {onApply && job.status === 'saved' && hasScore && (
+            <button
+              onClick={(e) => { e.preventDefault(); onApply(job); }}
+              title="Start Application"
+              className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-accent-600 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-900/20 rounded-md transition-colors"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Apply
+            </button>
+          )}
           {!hasScore && onAnalyze && !isArchived && (
             <button
-              onClick={() => onAnalyze(job.id)}
+              onClick={(e) => { e.preventDefault(); onAnalyze(job.id); }}
               disabled={analyzing}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-accent-700 dark:text-accent-300 bg-accent-50 dark:bg-accent-900/30 hover:bg-accent-100 dark:hover:bg-accent-900/50 rounded-lg transition-colors disabled:opacity-50"
+              title="Analyze with AI"
+              className="w-7 h-7 inline-flex items-center justify-center text-accent-600 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-900/30 rounded-md transition-colors disabled:opacity-50"
             >
               {analyzing ? (
-                <>
-                  <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-accent-600" />
-                  Analyzing...
-                </>
+                <div className="animate-spin rounded-full h-3.5 w-3.5 border-t-2 border-b-2 border-accent-600" />
               ) : (
-                <>
-                  <Sparkles className="w-3 h-3" />
-                  Analyze
-                </>
+                <Sparkles className="w-4 h-4" />
               )}
             </button>
           )}
           {onSave && job.status !== 'saved' && job.status !== 'applied' && job.status !== 'archived' && (
             <button
-              onClick={() => onSave(job.id)}
-              className="px-3 py-1.5 text-sm font-medium text-primary-700 dark:text-primary-300 hover:text-primary-900 dark:hover:text-primary-100 hover:bg-primary-100 dark:hover:bg-primary-700 rounded-lg transition-colors"
+              onClick={(e) => { e.preventDefault(); onSave(job.id); }}
+              title="Save"
+              className="w-7 h-7 inline-flex items-center justify-center text-primary-400 dark:text-primary-500 hover:text-accent-600 dark:hover:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-900/20 rounded-md transition-colors"
             >
-              Save
+              <Star className="w-4 h-4" />
             </button>
           )}
           {onDismiss && job.status !== 'archived' && (
             <button
-              onClick={() => onDismiss(job.id)}
-              className="px-3 py-1.5 text-sm font-medium text-primary-500 dark:text-primary-400 hover:text-error-600 dark:hover:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 rounded-lg transition-colors"
+              onClick={(e) => { e.preventDefault(); onDismiss(job.id); }}
+              title="Dismiss"
+              className="inline-flex items-center gap-1 px-2 py-1 text-xs text-primary-400 dark:text-primary-500 hover:text-error-600 dark:hover:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 rounded-md transition-colors"
             >
+              <X className="w-3.5 h-3.5" />
               Dismiss
             </button>
           )}
         </div>
-      </div>
-    </div>
+      )}
+    </article>
   );
 }

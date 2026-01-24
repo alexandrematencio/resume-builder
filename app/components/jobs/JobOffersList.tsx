@@ -13,6 +13,7 @@ interface JobOffersListProps {
   onAnalyze: (jobId: string) => Promise<void>;
   onSave: (jobId: string) => Promise<void>;
   onDismiss: (jobId: string) => Promise<void>;
+  onApply?: (job: JobOffer) => void;
 }
 
 const statusOptions: { value: JobOfferStatus; label: string }[] = [
@@ -32,6 +33,7 @@ export default function JobOffersList({
   onAnalyze,
   onSave,
   onDismiss,
+  onApply,
 }: JobOffersListProps) {
   const [searchInput, setSearchInput] = useState(filters.search || '');
   const [showFilters, setShowFilters] = useState(false);
@@ -229,6 +231,7 @@ export default function JobOffersList({
               onAnalyze={handleAnalyze}
               onSave={onSave}
               onDismiss={onDismiss}
+              onApply={onApply}
               analyzing={analyzingId === job.id}
             />
           ))}

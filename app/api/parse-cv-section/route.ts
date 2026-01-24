@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { Education, WorkExperience, Skill, SkillCategory, SkillProficiency } from '@/app/types';
 
-type SectionType = 'education' | 'experience' | 'skills';
+type SectionType = 'education' | 'experience' | 'skills' | 'personal';
 
 interface ParseRequest {
   section: SectionType;
@@ -16,7 +16,7 @@ interface Uncertainty {
 
 interface ParseResponse {
   success: boolean;
-  data: Education[] | WorkExperience[] | Skill[];
+  data: Education[] | WorkExperience[] | Skill[] | PersonalInfo;
   uncertainties: Uncertainty[];
   error?: string;
 }
@@ -159,6 +159,58 @@ Include uncertainties array to flag any fields where you had to guess or infer i
 DO NOT add uncertainty for proficiency when it's null - null is the correct default when not specified.`;
 }
 
+function getPersonalPrompt(content: string): string {
+  return `You are extracting personal/contact information from CV/resume text. Parse the following text and extract the person's contact details and basic information.
+
+Extract:
+- fullName: The person's full name
+- email: Email address (null if not found)
+- phone: Phone number (null if not found)
+- address: City, country or full address (null if not found)
+- age: Age as a number (null if not found; if date of birth is given, calculate age)
+- languages: Array of languages with proficiency if mentioned (e.g., [{"language": "French", "proficiency": "native"}, {"language": "English", "proficiency": "professional"}])
+- portfolio: Any website, LinkedIn, or portfolio URL (null if not found)
+
+TEXT TO PARSE:
+${content}
+
+Respond ONLY with a valid JSON object in this exact format:
+{
+  "personal": {
+    "fullName": "string or null",
+    "email": "string or null",
+    "phone": "string or null",
+    "address": "string or null",
+    "age": number or null,
+    "languages": [{"language": "string", "proficiency": "string"}] or [],
+    "portfolio": "string or null"
+  },
+  "uncertainties": [
+    {
+      "entryIndex": 0,
+      "field": "string",
+      "reason": "string"
+    }
+  ]
+}
+
+Include uncertainties for fields you had to infer. Common reasons:
+- "Name format unclear"
+- "Phone format ambiguous"
+- "Age calculated from date of birth"
+- "Language proficiency inferred from context"`;
+}
+
+interface PersonalInfo {
+  fullName: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  age: number | null;
+  languages: { language: string; proficiency: string }[];
+  portfolio: string | null;
+}
+
 function getPromptForSection(section: SectionType, content: string): string {
   switch (section) {
     case 'education':
@@ -167,6 +219,8 @@ function getPromptForSection(section: SectionType, content: string): string {
       return getExperiencePrompt(content);
     case 'skills':
       return getSkillsPrompt(content);
+    case 'personal':
+      return getPersonalPrompt(content);
   }
 }
 
@@ -251,7 +305,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ParseResp
       );
     }
 
-    if (!['education', 'experience', 'skills'].includes(section)) {
+    if (!['education', 'experience', 'skills', 'personal'].includes(section)) {
       return NextResponse.json(
         { success: false, data: [], uncertainties: [], error: 'Invalid section type' },
         { status: 400 }
@@ -291,14 +345,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<ParseResp
     const responseText = data.content[0].text;
 
     // Parse the JSON response
-    let parsed: { entries: unknown[]; uncertainties: Uncertainty[] };
+    let parsedJson: Record<string, unknown>;
     try {
       // Try to extract JSON from the response (in case there's extra text)
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No JSON found in response');
       }
-      parsed = JSON.parse(jsonMatch[0]);
+      parsedJson = JSON.parse(jsonMatch[0]);
     } catch (parseError) {
       console.error('Failed to parse AI response:', responseText);
       return NextResponse.json(
@@ -307,24 +361,36 @@ export async function POST(request: NextRequest): Promise<NextResponse<ParseResp
       );
     }
 
-    // Process entries based on section type
+    const uncertainties = (parsedJson.uncertainties as Uncertainty[]) || [];
+
+    // Process based on section type
+    if (section === 'personal') {
+      const personal = (parsedJson.personal || parsedJson) as PersonalInfo;
+      return NextResponse.json({
+        success: true,
+        data: personal,
+        uncertainties,
+      });
+    }
+
+    const entries = (parsedJson.entries as unknown[]) || [];
     let processedData: Education[] | WorkExperience[] | Skill[];
     switch (section) {
       case 'education':
-        processedData = processEducationEntries(parsed.entries as Parameters<typeof processEducationEntries>[0]);
+        processedData = processEducationEntries(entries as Parameters<typeof processEducationEntries>[0]);
         break;
       case 'experience':
-        processedData = processExperienceEntries(parsed.entries as Parameters<typeof processExperienceEntries>[0]);
+        processedData = processExperienceEntries(entries as Parameters<typeof processExperienceEntries>[0]);
         break;
       case 'skills':
-        processedData = processSkillEntries(parsed.entries as Parameters<typeof processSkillEntries>[0]);
+        processedData = processSkillEntries(entries as Parameters<typeof processSkillEntries>[0]);
         break;
     }
 
     return NextResponse.json({
       success: true,
       data: processedData,
-      uncertainties: parsed.uncertainties || [],
+      uncertainties,
     });
 
   } catch (error) {

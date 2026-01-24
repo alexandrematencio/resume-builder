@@ -304,8 +304,8 @@ Supabase with Row Level Security (RLS) for user data isolation.
 Supabase Auth with email/password:
 - `app/contexts/AuthContext.tsx` - Provides `useAuth()` hook with `user`, `signIn`, `signUp`, `signOut`
 - `middleware.ts` - Route protection: redirects unauthenticated users to `/login`
-- **Public routes**: `/login`, `/signup`, `/auth/callback`
-- **Protected routes**: `/` (dashboard), `/account`
+- **Public routes**: `/login`, `/signup`, `/auth/callback`, `/landing`
+- **Protected routes**: `/` (Applications), `/jobs` (Matching), `/jobs/[id]` (Job detail), `/account`
 
 ---
 
@@ -323,6 +323,16 @@ const { profile, updateProfile, roleProfiles, saveRoleProfile } = useProfile();
 - Creates empty profile on first login
 - Tracks profile completeness percentage
 
+### JobIntelligenceContext (`app/contexts/JobIntelligenceContext.tsx`)
+Manages job intelligence state (preferences, job offers, analysis):
+```typescript
+const { preferences, updatePreferences, jobOffers, analyzeJob, importJob } = useJobIntelligence();
+```
+- Manages job preferences (salary, location, remote, perks, scoring weights)
+- CRUD for imported job offers
+- Triggers AI analysis (match scoring, blockers, insights)
+- Stores analysis results per job
+
 ---
 
 ## API Routes
@@ -338,11 +348,25 @@ Parses CV text into structured data for bulk import:
 ```typescript
 POST /api/parse-cv-section
 {
-  section: 'education' | 'experience' | 'skills',
+  section: 'education' | 'experience' | 'skills' | 'personal',
   content: string
 }
 // Returns structured data + uncertainty flags for fields AI wasn't sure about
 ```
+
+### `/api/parse-job-description` - Job Description Parsing
+Parses job posting text into structured JobOffer data (title, company, location, salary, skills, perks, contract type, etc.).
+
+### `/api/analyze-job` - Job-Profile Match Analysis
+Performs full match analysis:
+- Hard blockers (salary, location, remote policy)
+- Skills match % (including cross-language matching: French ↔ English)
+- Perks match count
+- Overall weighted score (0-100)
+- AI insights (strengths, gaps, strategic advice, culture fit, growth potential, red flags)
+
+### `/api/fetch-job-url` - Job URL Content Fetcher
+Fetches page content from a job posting URL for parsing.
 
 ### `/api/extract-pdf-text` - PDF Text Extraction
 Extracts text from uploaded PDF files:
@@ -375,10 +399,22 @@ Located in `app/account/` with 8 tabs:
 
 ## Key Components
 
-### Dashboard (`app/page.tsx`)
-- Application list with status filtering
+### Navigation Structure
+
+The app has 3 main sections accessible via a bottom nav bar:
+1. **Applications** (`/`) - Application pipeline tracking
+2. **Matching** (`/jobs`) - Job intelligence and matching
+3. **Account** (`/account`) - Profile management
+
+### Landing Page (`app/landing/page.tsx`)
+- Public marketing page for unauthenticated users
+- Hero: "Know which jobs fit you before you apply."
+- Features grid, core feature highlight, how-it-works, CTA
+
+### Applications Dashboard (`app/page.tsx`)
+- Application list with status filtering (all, draft, sent, waiting, interview, offer, rejected)
 - KPI dashboard (counts by status)
-- Interview tracking
+- Interview tracking (excludes offer/rejected/closed from interview filter)
 
 ### Modals
 - `CVDetailModal.tsx` - View/edit application details, CV versions, cover letters
@@ -389,6 +425,19 @@ Located in `app/account/` with 8 tabs:
 - `CVEditor.tsx` - CV content editing
 - `CoverLetterEditor.tsx` - Cover letter editing
 - `CVRenderer.tsx` - CV preview rendering
+
+### Matching / Job Intelligence (`app/jobs/`)
+- `app/jobs/page.tsx` - Main matching page with job list, stats, preferences tab
+- `app/jobs/[id]/page.tsx` - Job detail page with full analysis view
+- `app/components/jobs/JobOfferCard.tsx` - Job card with score badge, meta info, actions (analyze, save, dismiss)
+- `app/components/jobs/JobOffersList.tsx` - Paginated job list with filters
+- `app/components/jobs/JobImportModal.tsx` - Import job via paste or URL
+- `app/components/jobs/JobIntelligenceView.tsx` - Full match analysis display (score, skills, insights)
+- `app/components/jobs/JobPreferencesForm.tsx` - User preferences (salary, location, remote, perks, weights)
+
+### Services
+- `lib/job-filter-service.ts` - Scoring algorithm, hard blocker detection, weight calculation
+- `lib/job-intelligence-db.ts` - Supabase CRUD for job_offers, job_preferences, job_analysis_feedback
 
 ---
 
@@ -411,6 +460,17 @@ Create Application → Track status (draft → sent → interview → offer)
                    → Generate/upload CV versions
                    → Generate/upload cover letters
                    → Schedule interviews → Record outcomes
+```
+
+### Job Matching Flow
+```
+User imports job (paste/URL) → /api/parse-job-description → structured JobOffer
+                                                           ↓
+                              /api/analyze-job ← JobOffer + UserProfile + Preferences
+                                                           ↓
+JobIntelligenceView shows: match score, skills %, blockers, AI insights
+                                                           ↓
+User decides: Save / Dismiss / Create Application
 ```
 
 ---
@@ -466,18 +526,22 @@ Calculated in `lib/profile-db.ts` with weighted scoring:
 
 ---
 
-## Future Roadmap
+## Implementation Status
 
-### Job Filtering/Matching System (Planned)
-The application will evolve to include intelligent job filtering and matching based on:
-- User profile analysis (skills, experience, education)
-- Job description parsing and requirement extraction
-- Skill gap identification
-- Match scoring algorithm
-- Personalized job recommendations
+### Completed Features
+- ✅ Resume Builder & CV Management (Phase 1)
+- ✅ Cover Letter System (Phase 1)
+- ✅ Application Tracking Pipeline (Phase 1)
+- ✅ Role Profiles (Phase 1)
+- ✅ Job Intelligence Engine (Phase 2) — matching, scoring, blockers, AI insights, preferences
 
-### Planned Features
-1. **Job Scraping Integration** - Import jobs from LinkedIn, Indeed, etc.
-2. **Match Score Dashboard** - Visual indication of profile-job compatibility
-3. **Skill Gap Analysis** - Identify missing skills for target roles
-4. **Auto-tagging** - Automatic categorization of applications by match quality
+### Future Roadmap
+1. **Job Scraping Integration** - Auto-import from LinkedIn, Indeed, etc.
+2. **Data Portability** - Export all user data (GDPR compliance)
+3. **Rate Limiting** - Protect AI endpoints
+4. **Audit Logging** - Track data access for compliance
+5. **Accessibility Audit** - Screen reader testing
+
+---
+
+*Last updated: 2026-01-24*

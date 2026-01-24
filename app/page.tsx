@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, User, LogOut, ChevronDown, Edit2, Send, Calendar, Star, Ban, Trash2, FileText, Target, Clock, TrendingUp, Briefcase, Copy, CalendarPlus } from 'lucide-react';
+import { Plus, User, LogOut, ChevronDown, Edit2, Send, Calendar, Star, Ban, Trash2, FileText, Target, Clock, TrendingUp, Briefcase, Copy, CalendarPlus, ExternalLink, CheckCircle, X, HelpCircle } from 'lucide-react';
 import Button from '@/app/components/Button';
 import { ToastContainer } from '@/app/components/Toast';
 import NewApplicationModal from '@/app/components/NewApplicationModal';
@@ -19,6 +19,7 @@ import {
   DashboardStats,
   SentVia,
   InterviewInfo,
+  ParsedJobContext,
 } from '@/app/types';
 import {
   loadApplications,
@@ -30,6 +31,7 @@ import {
   deleteCoverLetter as deleteCoverLetterFromDb,
   migrateFromLocalStorage,
 } from '@/lib/supabase-db';
+import { getJobOffersStats } from '@/lib/job-intelligence-db';
 
 export default function JobHunterPro() {
   const router = useRouter();
@@ -48,6 +50,11 @@ export default function JobHunterPro() {
   const [generatingCV, setGeneratingCV] = useState(false);
   const [generatingCoverLetter, setGeneratingCoverLetter] = useState(false);
 
+  // Post-interview result flow
+  const [expandedResultId, setExpandedResultId] = useState<string | null>(null);
+  const [confirmDeclineId, setConfirmDeclineId] = useState<string | null>(null);
+  const declineTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // Interview modal
   const [showInterviewModal, setShowInterviewModal] = useState(false);
   const [interviewAppId, setInterviewAppId] = useState<string | null>(null);
@@ -56,11 +63,16 @@ export default function JobHunterPro() {
   const [interviewLocation, setInterviewLocation] = useState('');
   const [isEditingInterview, setIsEditingInterview] = useState(false);
 
-  // Interview details dropdown
-  const [expandedInterviewId, setExpandedInterviewId] = useState<string | null>(null);
+
+  // Saved job offers count for Matching badge
+  const [savedJobsCount, setSavedJobsCount] = useState(0);
 
   useEffect(() => {
     loadData();
+    // Load saved jobs count for badge
+    getJobOffersStats().then(stats => {
+      setSavedJobsCount(stats.byStatus?.saved || 0);
+    }).catch(() => {});
   }, []);
 
   // Close user menu when clicking outside
@@ -91,6 +103,15 @@ export default function JobHunterPro() {
       }
     }
   }, [showInterviewModal, interviewAppId, applications]);
+
+  // Cleanup decline timer on unmount
+  useEffect(() => {
+    return () => {
+      if (declineTimerRef.current) {
+        clearTimeout(declineTimerRef.current);
+      }
+    };
+  }, []);
 
   const loadData = async () => {
     try {
@@ -146,7 +167,8 @@ export default function JobHunterPro() {
 
   const generateCVFromScratch = async (
     jobDescription: string,
-    cvData: any
+    cvData: any,
+    parsedJobContext?: ParsedJobContext
   ): Promise<string> => {
     // Parse name into firstName/lastName
     const nameParts = cvData.name.trim().split(' ');
@@ -180,7 +202,20 @@ ${cvData.projects ? `KEY PROJECTS:\n${cvData.projects}` : ''}
 
 TARGET JOB DESCRIPTION:
 ${jobDescription}
+${parsedJobContext ? `
+AI-PARSED JOB REQUIREMENTS:
+- Required Skills: ${parsedJobContext.requiredSkills.join(', ')}
+- Nice-to-Have Skills: ${parsedJobContext.niceToHaveSkills.join(', ')}
+- Your Matched Skills: ${parsedJobContext.matchedSkills.join(', ')}
+- Missing Skills to Address: ${parsedJobContext.missingSkills.join(', ')}
 
+TAILORING INSTRUCTIONS:
+- Prioritize experiences demonstrating the REQUIRED skills listed above
+- In the skills section, list matched required skills FIRST
+- Mirror the job posting's language in the professional summary
+- For matched skills found in experience, highlight them explicitly in achievements
+- Do NOT fabricate skills the candidate doesn't have
+` : ''}
 CRITICAL INSTRUCTIONS:
 You MUST respond with ONLY valid JSON matching this exact structure (no markdown, no code blocks, just raw JSON):
 
@@ -282,7 +317,8 @@ REQUIREMENTS:
     jobDescription: string,
     template: Template,
     company: string,
-    role: string
+    role: string,
+    parsedJobContext?: ParsedJobContext
   ): Promise<string> => {
     const prompt = `You are an expert resume writer specializing in job application optimization. Create a highly targeted, ATS-friendly resume for this specific job opportunity.
 
@@ -292,7 +328,20 @@ Role: ${role}
 
 JOB DESCRIPTION:
 ${jobDescription}
+${parsedJobContext ? `
+AI-PARSED JOB REQUIREMENTS:
+- Required Skills: ${parsedJobContext.requiredSkills.join(', ')}
+- Nice-to-Have Skills: ${parsedJobContext.niceToHaveSkills.join(', ')}
+- Your Matched Skills: ${parsedJobContext.matchedSkills.join(', ')}
+- Missing Skills to Address: ${parsedJobContext.missingSkills.join(', ')}
 
+TAILORING PRIORITY:
+- Prioritize experiences demonstrating the REQUIRED skills listed above
+- In the skills section, list matched required skills FIRST
+- Mirror the job posting's language in the professional summary
+- For matched skills found in experience, highlight them explicitly in bullet points
+- Do NOT fabricate skills the candidate doesn't have
+` : ''}
 CANDIDATE PROFILE (use as foundation):
 Name: ${template.content.personalInfo.name}
 Email: ${template.content.personalInfo.email}
@@ -572,6 +621,7 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
     cvData?: any;
     useExistingTemplate: boolean;
     selectedTemplateId?: string;
+    parsedJobContext?: ParsedJobContext;
   }) => {
     setGeneratingCV(true);
     
@@ -587,7 +637,8 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
           data.jobDescription,
           template,
           data.company,
-          data.role
+          data.role,
+          data.parsedJobContext
         );
         usedTemplateId = template.id;
         
@@ -598,7 +649,7 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
         );
         saveTemplates(updatedTemplates);
       } else {
-        cvContent = await generateCVFromScratch(data.jobDescription, data.cvData);
+        cvContent = await generateCVFromScratch(data.jobDescription, data.cvData, data.parsedJobContext);
       }
 
       const firstCV: CVVersion = {
@@ -905,7 +956,6 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
     });
 
     saveApplications(updatedApps);
-    setExpandedInterviewId(null);
     setShowInterviewModal(false);
     setInterviewAppId(null);
     setInterviewDate('');
@@ -1261,7 +1311,7 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
         ? applications.filter(a => a.status === 'sent' || a.status === 'waiting' || a.status === 'interview' || (a.tracking.interviewScheduled && a.status !== 'offer' && a.status !== 'rejected'))
         : filterStatus === 'interview'
           // Interview: status is 'interview' OR has interviewScheduled
-          ? applications.filter(a => a.status === 'interview' || a.tracking.interviewScheduled)
+          ? applications.filter(a => a.status === 'interview' || (a.tracking.interviewScheduled && a.status !== 'offer' && a.status !== 'rejected' && a.status !== 'closed'))
           : applications.filter(a => a.status === filterStatus);
 
   // Sort by most recent
@@ -1276,7 +1326,7 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
     // "Waiting" includes sent, waiting, and interview (all pending final response)
     waiting: applications.filter(a => a.status === 'sent' || a.status === 'waiting' || a.status === 'interview' || (a.tracking.interviewScheduled && a.status !== 'offer' && a.status !== 'rejected' && a.status !== 'closed')).length,
     // Interview: status is 'interview' OR has interviewScheduled
-    interview: applications.filter(a => a.status === 'interview' || a.tracking.interviewScheduled).length,
+    interview: applications.filter(a => a.status === 'interview' || (a.tracking.interviewScheduled && a.status !== 'offer' && a.status !== 'rejected' && a.status !== 'closed')).length,
     offer: applications.filter(a => a.status === 'offer').length,
     rejected: applications.filter(a => a.status === 'rejected').length,
     closed: applications.filter(a => a.status === 'closed').length,
@@ -1336,8 +1386,13 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
                   onClick={() => router.push('/jobs')}
                   className="px-3 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-100 hover:bg-primary-100 dark:hover:bg-primary-700 rounded-lg transition-colors flex items-center gap-2"
                 >
-                  <Briefcase className="w-4 h-4" />
-                  Jobs
+                  <Target className="w-4 h-4" />
+                  Matching
+                  {savedJobsCount > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-accent-600 text-white text-xs font-medium">
+                      {savedJobsCount}
+                    </span>
+                  )}
                 </button>
               </nav>
             </div>
@@ -1573,21 +1628,13 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
           <div className="bg-white dark:bg-primary-800 rounded-lg shadow-lg overflow-hidden border border-primary-200 dark:border-primary-700">
             <div className="divide-y divide-primary-100 dark:divide-primary-700">
               {sortedApps.map(app => {
-                const isSent = app.status === 'sent' || app.status === 'waiting' || app.status === 'interview' || app.status === 'offer';
                 const hasInterview = !!app.tracking.interviewScheduled;
-                const isRejected = app.status === 'rejected';
-                const hasOffer = app.status === 'offer';
-                const isClosed = app.status === 'closed';
-
-                const isExpired = app.tracking.sentDate && !app.tracking.interviewScheduled && !app.tracking.outcome
-                  ? (Date.now() - app.tracking.sentDate) / (1000 * 60 * 60 * 24) > 30
-                  : false;
 
                 return (
                   <div key={app.id}>
                     <div
-                      className="p-4 hover:bg-primary-50 dark:hover:bg-primary-700/50 transition-colors cursor-pointer"
-                      onClick={() => hasInterview && setExpandedInterviewId(expandedInterviewId === app.id ? null : app.id)}
+                      className="group relative p-4 cursor-pointer transition-all duration-200 hover:bg-primary-50/50 dark:hover:bg-primary-700/30 border-l-4 border-l-transparent hover:border-l-primary-300 dark:hover:border-l-primary-500"
+                      onClick={() => setSelectedApp(app)}
                     >
                       <div className="flex items-center justify-between">
                         {/* Left: Job Info */}
@@ -1598,6 +1645,18 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
                             </h3>
                             <span className="text-primary-300 dark:text-primary-600">•</span>
                             <span className="text-primary-600 dark:text-primary-400">{app.company}</span>
+                            {app.jobUrl && (
+                              <a
+                                href={app.jobUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                title="Open original job posting"
+                                className="text-primary-400 dark:text-primary-500 hover:text-primary-600 dark:hover:text-primary-300 transition-colors"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            )}
                             <span className={`badge ${
                               app.status === 'draft' ? 'badge-draft' :
                               app.status === 'sent' ? 'badge-sent' :
@@ -1622,242 +1681,212 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
                           <div className="text-sm text-primary-500 dark:text-primary-400 mt-1">
                             Created {new Date(app.createdAt).toLocaleDateString()}
                           </div>
+                          {hasInterview && app.tracking.interviewScheduled && (
+                            <div className="flex items-center gap-2 mt-2 text-sm text-accent-700 dark:text-accent-300">
+                              <Calendar className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+                              <span>
+                                {new Date(app.tracking.interviewScheduled.date).toLocaleDateString('en-US', {
+                                  weekday: 'short', month: 'short', day: 'numeric'
+                                })}
+                                {' at '}
+                                {new Date(app.tracking.interviewScheduled.date).toLocaleTimeString('en-US', {
+                                  hour: '2-digit', minute: '2-digit', hour12: false
+                                })}
+                              </span>
+                              {app.tracking.interviewScheduled.location && (
+                                <>
+                                  <span className="text-primary-300 dark:text-primary-600">|</span>
+                                  <Target className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+                                  <span className="truncate max-w-[200px]">{app.tracking.interviewScheduled.location}</span>
+                                </>
+                              )}
+                              {/* Interview action icons */}
+                              <span className="text-primary-200 dark:text-primary-700 ml-1">|</span>
+                              {app.tracking.interviewScheduled.location && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); copyToClipboard(app.tracking.interviewScheduled!.location!); }}
+                                  title="Copy address"
+                                  className="w-6 h-6 flex items-center justify-center text-accent-500 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-200 hover:bg-accent-50 dark:hover:bg-accent-900/30 rounded transition-colors"
+                                >
+                                  <Copy className="w-3.5 h-3.5" aria-hidden="true" />
+                                </button>
+                              )}
+                              <button
+                                onClick={(e) => { e.stopPropagation(); addToCalendar(app.id); }}
+                                title="Add to calendar"
+                                className="w-6 h-6 flex items-center justify-center text-accent-500 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-200 hover:bg-accent-50 dark:hover:bg-accent-900/30 rounded transition-colors"
+                              >
+                                <CalendarPlus className="w-3.5 h-3.5" aria-hidden="true" />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setInterviewAppId(app.id); setIsEditingInterview(true); setInterviewDate(new Date(app.tracking.interviewScheduled!.date).toISOString().split('T')[0]); setInterviewTime(new Date(app.tracking.interviewScheduled!.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })); setInterviewLocation(app.tracking.interviewScheduled!.location || ''); setShowInterviewModal(true); }}
+                                title="Edit interview"
+                                className="w-6 h-6 flex items-center justify-center text-accent-500 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-200 hover:bg-accent-50 dark:hover:bg-accent-900/30 rounded transition-colors"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); if (window.confirm('Delete this interview?')) deleteInterview(app.id); }}
+                                title="Delete interview"
+                                className="w-6 h-6 flex items-center justify-center text-primary-400 dark:text-primary-500 hover:text-error-600 dark:hover:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 rounded transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                              </button>
+                            </div>
+                          )}
                         </div>
 
-                        {/* Right: Action Buttons */}
-                        <div className="flex items-center gap-2">
-                          {/* Edit Button */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedApp(app);
-                            }}
-                            className="btn-icon"
-                            title="Edit CV"
-                            aria-label="Edit CV"
-                          >
-                            <Edit2 className="w-5 h-5" aria-hidden="true" />
-                          </button>
-
-                          {/* Send Button - Hide when closed */}
-                          {!isClosed && (
+                        {/* Right: Flow-step action + Delete */}
+                        <div className="flex items-center gap-1.5">
+                          {/* Flow-step action: always visible */}
+                          {app.status === 'draft' && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                !isSent && markAsSent(app.id);
+                                markAsSent(app.id);
                               }}
-                              disabled={isSent}
-                              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                                isSent
-                                  ? 'bg-info-600 text-white cursor-not-allowed opacity-70'
-                                  : 'bg-info-600 text-white hover:bg-info-700 shadow-sm hover:shadow-md'
-                              }`}
-                              title={isSent ? 'Application sent' : 'Mark application as sent'}
+                              className="px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 text-sm bg-info-600 text-white hover:bg-info-700"
+                              title="Mark as Sent"
+                              aria-label="Mark as Sent"
                             >
-                              <Send className="w-4 h-4" aria-hidden="true" />
-                              {isSent ? 'Sent' : 'Send'}
+                              <Send className="w-3.5 h-3.5" aria-hidden="true" />
+                              Send
                             </button>
                           )}
-
-                          {/* Interview Button - Hide when closed */}
-                          {!isClosed && (
+                          {(app.status === 'sent' || app.status === 'waiting') && !hasInterview && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setInterviewAppId(app.id);
                                 setShowInterviewModal(true);
                               }}
-                              className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                                hasInterview
-                                  ? 'bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300'
-                                  : 'bg-accent-50 dark:bg-accent-900/20 text-accent-700 dark:text-accent-300 hover:bg-accent-100 dark:hover:bg-accent-900/40'
-                              }`}
-                              title={hasInterview ? 'View interview details' : 'Schedule interview'}
+                              className="px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 text-sm bg-accent-50 dark:bg-accent-900/20 text-accent-700 dark:text-accent-300 hover:bg-accent-100 dark:hover:bg-accent-900/40"
+                              title="Schedule Interview"
+                              aria-label="Schedule Interview"
                             >
-                              <Calendar className="w-4 h-4" aria-hidden="true" />
-                              {hasInterview ? 'Interview' : 'Interview'}
+                              <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
+                              Interview
                             </button>
                           )}
-
-                          {/* Validated/Offer Button - Enhanced with Accept confirmation */}
-                          {!isClosed && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (hasOffer) {
-                                  // If already offer, show confirmation to accept
-                                  if (window.confirm(`Accept the offer from ${app.company}? This will close the application.`)) {
-                                    markAsClosed(app.id, 'accepted');
-                                  }
-                                } else {
-                                  // Toggle to offer status
-                                  toggleOffer(app.id);
-                                }
-                              }}
-                              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                                hasOffer
-                                  ? 'bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-300 shadow-sm hover:bg-success-200 dark:hover:bg-success-900/40'
-                                  : 'bg-success-50 dark:bg-success-900/20 text-success-700 dark:text-success-300 hover:bg-success-100 dark:hover:bg-success-900/30'
-                              }`}
-                              title={hasOffer ? 'Click to accept offer' : 'Mark as offer received'}
-                            >
-                              <Star className="w-4 h-4" aria-hidden="true" />
-                              {hasOffer ? 'Offer' : 'Offer'}
-                            </button>
+                          {/* Post-interview: Result button */}
+                          {hasInterview && (app.status === 'sent' || app.status === 'waiting' || app.status === 'interview') && (
+                            expandedResultId === app.id ? (
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleOffer(app.id);
+                                    setExpandedResultId(null);
+                                  }}
+                                  className="px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 text-sm bg-success-50 dark:bg-success-900/20 text-success-700 dark:text-success-300 hover:bg-success-100 dark:hover:bg-success-900/40"
+                                  aria-label="Got an offer"
+                                >
+                                  <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                                  Offer
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markAsRejected(app.id);
+                                    setExpandedResultId(null);
+                                  }}
+                                  className="px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 text-sm bg-primary-100 dark:bg-primary-700 text-primary-600 dark:text-primary-400 hover:bg-primary-200 dark:hover:bg-primary-600"
+                                  aria-label="No offer received"
+                                >
+                                  No offer
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExpandedResultId(null);
+                                  }}
+                                  className="w-6 h-6 flex items-center justify-center text-primary-400 dark:text-primary-500 hover:text-primary-600 dark:hover:text-primary-300 rounded transition-colors"
+                                  aria-label="Close"
+                                >
+                                  <X className="w-3.5 h-3.5" aria-hidden="true" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedResultId(app.id);
+                                }}
+                                className="px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 text-sm bg-primary-100 dark:bg-primary-700 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-600"
+                                title="Record interview result"
+                                aria-label="Record interview result"
+                              >
+                                <HelpCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                                Result
+                              </button>
+                            )
                           )}
-
-                          {/* Decline Button - Only show when status is 'offer' */}
-                          {hasOffer && !isClosed && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (window.confirm(`Decline the offer from ${app.company}?`)) {
-                                  markAsClosed(app.id, 'declined');
-                                }
-                              }}
-                              className="px-4 py-2 bg-warning-50 dark:bg-warning-900/20 text-warning-700 dark:text-warning-300 rounded-lg hover:bg-warning-100 dark:hover:bg-warning-900/30 font-medium transition-colors border border-warning-200 dark:border-warning-700/30"
-                              title="Decline this offer"
-                            >
-                              Decline
-                            </button>
+                          {/* Offer status: Accept / Decline */}
+                          {app.status === 'offer' && (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  markAsClosed(app.id, 'accepted');
+                                }}
+                                className="px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 text-sm bg-success-600 text-white hover:bg-success-700"
+                                aria-label="Accept offer"
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                                Accept
+                              </button>
+                              {confirmDeclineId === app.id ? (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (declineTimerRef.current) {
+                                      clearTimeout(declineTimerRef.current);
+                                      declineTimerRef.current = null;
+                                    }
+                                    setConfirmDeclineId(null);
+                                    markAsClosed(app.id, 'declined');
+                                  }}
+                                  className="px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 text-sm bg-error-100 dark:bg-error-900/20 text-error-700 dark:text-error-300 border border-error-300 dark:border-error-700 hover:bg-error-200 dark:hover:bg-error-900/40"
+                                  aria-label="Confirm decline"
+                                >
+                                  Confirm?
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setConfirmDeclineId(app.id);
+                                    declineTimerRef.current = setTimeout(() => {
+                                      setConfirmDeclineId(null);
+                                      declineTimerRef.current = null;
+                                    }, 3000);
+                                  }}
+                                  className="px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 text-sm bg-primary-100 dark:bg-primary-700 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-600 hover:bg-primary-200 dark:hover:bg-primary-600"
+                                  aria-label="Decline offer"
+                                >
+                                  Decline
+                                </button>
+                              )}
+                            </div>
                           )}
-
-                          {/* Expire Button - Only show for old applications without response */}
-                          {isExpired && !isClosed && !isRejected && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (window.confirm(`Mark application as expired (no response after 30+ days)?`)) {
-                                  markAsClosed(app.id, 'expired');
-                                }
-                              }}
-                              className="px-4 py-2 bg-primary-50 dark:bg-primary-700/50 text-primary-700 dark:text-primary-300 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-700 font-medium transition-colors border border-primary-200 dark:border-primary-600"
-                              title="Mark as expired (no response)"
-                            >
-                              Expire
-                            </button>
-                          )}
-
-                          {/* Rejected Button */}
-                          {!isClosed && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (isSent && !isRejected) markAsRejected(app.id);
-                              }}
-                              disabled={isRejected || !isSent}
-                              className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all ${
-                                isRejected
-                                  ? 'bg-primary-100 dark:bg-primary-700 text-primary-400 dark:text-primary-500 cursor-not-allowed'
-                                  : !isSent
-                                  ? 'bg-primary-50 dark:bg-primary-800 text-primary-300 dark:text-primary-600 cursor-not-allowed'
-                                  : 'bg-primary-100 dark:bg-primary-700 text-primary-600 dark:text-primary-300 hover:bg-error-50 dark:hover:bg-error-900/30 hover:text-error-600 dark:hover:text-error-400'
-                              }`}
-                              title={isRejected ? 'Application rejected' : !isSent ? 'Send application first' : 'Set application as rejected'}
-                              aria-label={isRejected ? 'Application rejected' : !isSent ? 'Send application first' : 'Set application as rejected'}
-                            >
-                              <Ban className="w-5 h-5" aria-hidden="true" />
-                            </button>
-                          )}
-
-                          {/* Delete Button */}
+                          {/* Delete: hover-only */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (window.confirm(`Are you sure you want to delete the application for ${app.role} at ${app.company}?`)) {
+                              if (window.confirm(`Delete the application for ${app.role} at ${app.company}?`)) {
                                 deleteApplication(app.id);
                               }
                             }}
-                            className="w-10 h-10 flex items-center justify-center bg-error-50 dark:bg-error-900/20 text-error-600 dark:text-error-400 rounded-lg hover:bg-error-100 dark:hover:bg-error-900/30 transition-colors"
+                            className="w-7 h-7 flex items-center justify-center text-primary-300 dark:text-primary-600 opacity-0 group-hover:opacity-100 hover:text-error-600 dark:hover:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 rounded-lg transition-all duration-200"
                             title="Delete application"
                             aria-label="Delete application"
                           >
-                            <Trash2 className="w-5 h-5" aria-hidden="true" />
+                            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                           </button>
                         </div>
                       </div>
                     </div>
 
-                    {/* Interview Details Dropdown */}
-                    {hasInterview && expandedInterviewId === app.id && (
-                      <div className="px-4 py-3 bg-accent-50 dark:bg-accent-900/20 border-t border-accent-100 dark:border-accent-800/30">
-                        <div className="flex items-start justify-between gap-4">
-                          {/* Left: Interview Info */}
-                          <div className="flex-1 space-y-2">
-                            <div className="flex items-center gap-2 text-sm">
-                              <Calendar className="w-5 h-5 text-accent-600 dark:text-accent-400" aria-hidden="true" />
-                              <span className="text-primary-700 dark:text-primary-200 font-medium">
-                                {new Date(app.tracking.interviewScheduled!.date).toLocaleDateString('en-US', {
-                                  weekday: 'long',
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                })}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                              <Clock className="w-5 h-5 text-accent-600 dark:text-accent-400" aria-hidden="true" />
-                              <span className="text-primary-700 dark:text-primary-200 font-medium">
-                                {new Date(app.tracking.interviewScheduled!.date).toLocaleTimeString('en-US', {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                  hour12: false
-                                })}
-                              </span>
-                            </div>
-                            {app.tracking.interviewScheduled!.location && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <Target className="w-5 h-5 text-accent-600 dark:text-accent-400" aria-hidden="true" />
-                                <span className="text-primary-700 dark:text-primary-200 font-medium flex-1">
-                                  {app.tracking.interviewScheduled!.location}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Right: Action Buttons - Aligned vertically */}
-                          <div className="flex flex-col gap-2 items-end">
-                            {app.tracking.interviewScheduled!.location && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  copyToClipboard(app.tracking.interviewScheduled!.location!);
-                                }}
-                                className="px-3 py-1.5 bg-primary-100 dark:bg-primary-700 text-primary-700 dark:text-primary-200 rounded-lg hover:bg-primary-200 dark:hover:bg-primary-600 font-medium transition-colors text-xs flex items-center gap-1"
-                                title="Copy address to clipboard"
-                              >
-                                <Copy className="w-3.5 h-3.5" aria-hidden="true" />
-                                Copy
-                              </button>
-                            )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                addToCalendar(app.id);
-                              }}
-                              className="px-3 py-1.5 bg-accent-600 text-white rounded-lg hover:bg-accent-700 font-medium transition-colors text-xs flex items-center gap-1 whitespace-nowrap"
-                              title="Add interview to calendar"
-                            >
-                              <CalendarPlus className="w-3.5 h-3.5" aria-hidden="true" />
-                              Add to Calendar
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (window.confirm('Delete this interview? This cannot be undone.')) {
-                                  deleteInterview(app.id);
-                                }
-                              }}
-                              className="px-3 py-1.5 bg-error-100 dark:bg-error-900/30 text-error-700 dark:text-error-400 rounded-lg hover:bg-error-200 dark:hover:bg-error-900/50 font-medium transition-colors text-xs flex items-center gap-1 border border-error-300 dark:border-error-700/30 whitespace-nowrap"
-                              title="Delete interview"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                              Delete Interview
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -2046,6 +2075,11 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
             onCreateNewCoverLetterVersion={(appId, currentCoverLetterId) => createNewCoverLetterVersion(appId, currentCoverLetterId)}
             onSetMainCoverLetter={(appId, coverLetterId) => setMainCoverLetter(appId, coverLetterId)}
             onDownloadCoverLetter={(coverLetter) => downloadCoverLetter(coverLetter, selectedApp)}
+          onMarkAsSent={(appId) => { markAsSent(appId); setSelectedApp(null); }}
+          onScheduleInterview={(appId) => { setInterviewAppId(appId); setShowInterviewModal(true); setSelectedApp(null); }}
+          onMarkOffer={(appId) => { toggleOffer(appId); setSelectedApp(null); }}
+          onMarkRejected={(appId) => { markAsRejected(appId); setSelectedApp(null); }}
+          onDeclineOffer={(appId) => { markAsClosed(appId, 'declined'); setSelectedApp(null); }}
         />
       )}
     </div>

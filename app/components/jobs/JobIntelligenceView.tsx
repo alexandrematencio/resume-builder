@@ -15,7 +15,6 @@ import {
   ChevronUp,
   Star,
   Archive,
-  Send,
   FileText,
   Sparkles,
   Loader2,
@@ -34,6 +33,7 @@ interface JobIntelligenceViewProps {
   onSave: () => Promise<void>;
   onApply: () => Promise<void>;
   onArchive: () => Promise<void>;
+  onDismissRedFlag?: (flag: string) => Promise<void>;
   analyzing?: boolean;
 }
 
@@ -44,6 +44,7 @@ export default function JobIntelligenceView({
   onSave,
   onApply,
   onArchive,
+  onDismissRedFlag,
   analyzing = false,
 }: JobIntelligenceViewProps) {
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -202,8 +203,8 @@ export default function JobIntelligenceView({
               onClick={onApply}
               className="inline-flex items-center gap-2 px-4 py-2 bg-success-600 text-white rounded-lg text-sm font-medium hover:bg-success-700 transition-colors"
             >
-              <Send className="w-4 h-4" />
-              Mark as Applied
+              <FileText className="w-4 h-4" />
+              Apply to this offer
             </button>
           )}
           <button
@@ -324,12 +325,27 @@ export default function JobIntelligenceView({
                 Red Flags
               </h3>
               <ul className="space-y-2">
-                {job.aiInsights.redFlags.map((flag, index) => (
-                  <li key={index} className="text-sm text-error-700 dark:text-error-300 flex items-start gap-2">
-                    <XCircle className="w-4 h-4 text-error-500 mt-0.5 flex-shrink-0" />
-                    {flag}
-                  </li>
-                ))}
+                {job.aiInsights.redFlags.map((flag, index) => {
+                  const isDismissed = (job.dismissedRedFlags || []).includes(flag);
+                  return (
+                    <li key={index} className={`text-sm flex items-start gap-2 ${isDismissed ? 'opacity-50' : 'text-error-700 dark:text-error-300'}`}>
+                      <XCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDismissed ? 'text-primary-400' : 'text-error-500'}`} />
+                      <span className={isDismissed ? 'line-through text-primary-500 dark:text-primary-400' : ''}>
+                        {flag}
+                      </span>
+                      {isDismissed ? (
+                        <span className="ml-auto text-xs text-primary-400 dark:text-primary-500 whitespace-nowrap">Acknowledged</span>
+                      ) : onDismissRedFlag ? (
+                        <button
+                          onClick={() => onDismissRedFlag(flag)}
+                          className="ml-auto text-xs text-primary-500 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-200 whitespace-nowrap underline"
+                        >
+                          I accept this
+                        </button>
+                      ) : null}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
@@ -376,6 +392,40 @@ export default function JobIntelligenceView({
               </div>
             )}
           </div>
+
+          {/* Matched Skills */}
+          {job.matchedSkills && job.matchedSkills.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm text-primary-500 dark:text-primary-400 mb-2">Matched Skills</p>
+              <div className="flex flex-wrap gap-2">
+                {job.matchedSkills.map((skill, index) => (
+                  <span
+                    key={index}
+                    className="px-2 py-1 bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-300 rounded-lg text-xs font-medium"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Missing Skills */}
+          {job.missingSkills && job.missingSkills.length > 0 && (
+            <div className="mt-3">
+              <p className="text-sm text-primary-500 dark:text-primary-400 mb-2">Missing Skills</p>
+              <div className="flex flex-wrap gap-2">
+                {job.missingSkills.map((skill, index) => (
+                  <span
+                    key={index}
+                    className="px-2 py-1 bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300 rounded-lg text-xs font-medium"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

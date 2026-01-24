@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useProfile } from '@/app/contexts/ProfileContext';
+import AutocompleteInput from '@/app/components/AutocompleteInput';
+import { COUNTRIES, CITIES } from '@/lib/location-data';
 
 const personalInfoSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
@@ -27,10 +29,22 @@ interface Props {
 export default function PersonalInfoForm({ onSaveStart, onSaveSuccess, onSaveError }: Props) {
   const { profile, updateProfile } = useProfile();
 
+  const countryOptions = useMemo(() =>
+    COUNTRIES.map(c => ({ value: c.name, label: c.name })),
+    []
+  );
+
+  const cityOptions = useMemo(() =>
+    CITIES.map(c => ({ value: c.name, label: c.name, sublabel: c.country })),
+    []
+  );
+
   const {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<PersonalInfoData>({
     resolver: zodResolver(personalInfoSchema),
@@ -136,25 +150,21 @@ export default function PersonalInfoForm({ onSaveStart, onSaveSuccess, onSaveErr
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
-              City
-            </label>
-            <input
-              {...register('city')}
-              type="text"
-              className="input-primary"
+            <AutocompleteInput
+              label="City"
+              options={cityOptions}
+              value={watch('city') || ''}
+              onChange={(val) => setValue('city', val, { shouldDirty: true })}
               placeholder="New York"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
-              Country
-            </label>
-            <input
-              {...register('country')}
-              type="text"
-              className="input-primary"
+            <AutocompleteInput
+              label="Country"
+              options={countryOptions}
+              value={watch('country') || ''}
+              onChange={(val) => setValue('country', val, { shouldDirty: true })}
               placeholder="United States"
             />
           </div>

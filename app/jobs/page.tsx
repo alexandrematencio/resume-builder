@@ -2,14 +2,16 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Briefcase, TrendingUp, AlertTriangle, Star, FileText, User, LogOut, ChevronDown } from 'lucide-react';
+import { Plus, Briefcase, TrendingUp, AlertTriangle, Star, Target, FileText, User, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useProfile } from '@/app/contexts/ProfileContext';
 import { useJobIntelligence, JobIntelligenceProvider } from '@/app/contexts/JobIntelligenceContext';
 import { ThemeToggle } from '@/app/components/ThemeToggle';
 import JobOffersList from '@/app/components/jobs/JobOffersList';
 import JobImportModal from '@/app/components/jobs/JobImportModal';
-import type { JobOffer, JobOfferFilters } from '@/app/types';
+import NewApplicationModal from '@/app/components/NewApplicationModal';
+import { loadApplications, saveAllApplications } from '@/lib/supabase-db';
+import type { JobOffer, JobOfferFilters, Application, CVVersion, ApplicationStatus, ParsedJobContext } from '@/app/types';
 
 function JobsPageContent() {
   const router = useRouter();
@@ -26,6 +28,9 @@ function JobsPageContent() {
   } = useJobIntelligence();
 
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [selectedJobForApply, setSelectedJobForApply] = useState<JobOffer | null>(null);
+  const [creatingApplication, setCreatingApplication] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -81,6 +86,156 @@ function JobsPageContent() {
     router.push(`/jobs/${job.id}`);
   };
 
+  const handleApply = (job: JobOffer) => {
+    setSelectedJobForApply(job);
+    setShowApplicationModal(true);
+  };
+
+  const handleCreateApplication = async (data: {
+    company: string;
+    role: string;
+    jobDescription: string;
+    jobUrl?: string;
+    parsedJobContext?: ParsedJobContext;
+    cvData?: {
+      name: string;
+      email: string;
+      phone: string;
+      address: string;
+      age?: string;
+      languages?: string;
+      portfolio?: string;
+      summary: string;
+      experience: string;
+      skills: string;
+      education: string;
+      projects?: string;
+    };
+    useExistingTemplate: boolean;
+    selectedTemplateId?: string;
+  }) => {
+    if (!user || !selectedJobForApply) return;
+    setCreatingApplication(true);
+
+    try {
+      const nameParts = (data.cvData?.name || '').trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      const prompt = `You are an expert resume writer. Create a professional, ATS-optimized resume tailored for this job.
+
+CANDIDATE INFORMATION:
+Name: ${data.cvData?.name || ''}
+Email: ${data.cvData?.email || ''}
+Phone: ${data.cvData?.phone || ''}
+Location: ${data.cvData?.address || ''}
+${data.cvData?.age ? `Age: ${data.cvData.age}` : ''}
+${data.cvData?.languages ? `Languages: ${data.cvData.languages}` : ''}
+${data.cvData?.portfolio ? `Portfolio: ${data.cvData.portfolio}` : ''}
+
+PROFESSIONAL SUMMARY:
+${data.cvData?.summary || 'Create a compelling professional summary'}
+
+WORK EXPERIENCE:
+${data.cvData?.experience || ''}
+
+SKILLS:
+${data.cvData?.skills || ''}
+
+EDUCATION:
+${data.cvData?.education || ''}
+
+${data.cvData?.projects ? `KEY PROJECTS:\n${data.cvData.projects}` : ''}
+
+TARGET JOB DESCRIPTION:
+${data.jobDescription}
+${data.parsedJobContext ? `
+AI-PARSED JOB REQUIREMENTS:
+- Required Skills: ${data.parsedJobContext.requiredSkills.join(', ')}
+- Nice-to-Have: ${data.parsedJobContext.niceToHaveSkills.join(', ')}
+- Matched Skills: ${data.parsedJobContext.matchedSkills.join(', ')}
+- Missing Skills: ${data.parsedJobContext.missingSkills.join(', ')}
+
+TAILORING INSTRUCTIONS:
+- Prioritize experiences demonstrating REQUIRED skills
+- List matched required skills FIRST in skills section
+- Mirror job posting language in summary
+- Do NOT fabricate skills
+` : ''}
+CRITICAL: Respond with ONLY valid JSON:
+{
+  "personalInfo": { "name": "${data.cvData?.name || ''}", "firstName": "${firstName}", "lastName": "${lastName}", "age": ${data.cvData?.age || 'null'}, "languages": ${data.cvData?.languages ? `"${data.cvData.languages}"` : 'null'}, "address": "${data.cvData?.address || ''}", "email": "${data.cvData?.email || ''}", "phone": "${data.cvData?.phone || ''}", "portfolio": ${data.cvData?.portfolio ? `"${data.cvData.portfolio}"` : 'null'}, "photo": null },
+  "profile": { "text": "Professional summary", "availability": "Available" },
+  "skills": { "technical": [], "marketing": [], "soft": [] },
+  "experiences": [{ "id": "1", "company": "", "jobTitle": "", "period": "", "industry": "", "achievements": [] }],
+  "projects": [],
+  "education": [{ "id": "1", "institution": "", "years": "", "degree": "", "specialization": "" }]
+}
+
+REQUIREMENTS:
+- 4-6 experiences (reverse chronological), 2 achievements each
+- Categorize skills into technical/marketing/soft
+- Return ONLY JSON, no markdown`;
+
+      const response = await fetch('/api/generate-resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+      const responseData = await response.json();
+      let cvContent = responseData.resume?.trim() || '';
+      if (cvContent.startsWith('```json')) {
+        cvContent = cvContent.replace(/^```json\n/, '').replace(/\n```$/, '');
+      } else if (cvContent.startsWith('```')) {
+        cvContent = cvContent.replace(/^```\n/, '').replace(/\n```$/, '');
+      }
+      JSON.parse(cvContent); // Validate JSON
+
+      const firstCV: CVVersion = {
+        id: `cv-${Date.now()}`,
+        version: 1,
+        content: cvContent,
+        generatedBy: 'ai',
+        createdAt: Date.now(),
+      };
+
+      const newApp: Application = {
+        id: `app-${Date.now()}`,
+        company: data.company,
+        role: data.role,
+        jobDescription: data.jobDescription,
+        jobUrl: data.jobUrl,
+        cvVersions: [firstCV],
+        coverLetters: [],
+        status: 'draft' as ApplicationStatus,
+        statusHistory: [{ status: 'draft' as ApplicationStatus, timestamp: Date.now(), note: 'Created from job matching' }],
+        tracking: { followUpDates: [] },
+        createdAt: Date.now(),
+        notes: '',
+        tags: [],
+        isFavorite: false,
+      };
+
+      const existingApps = await loadApplications();
+      await saveAllApplications([newApp, ...existingApps]);
+
+      // Update job status to applied
+      await updateJobStatus(selectedJobForApply.id, 'applied');
+
+      setShowApplicationModal(false);
+      setSelectedJobForApply(null);
+      router.push('/');
+    } catch (error) {
+      console.error('Failed to create application:', error);
+      alert('Failed to create application. Please try again.');
+    } finally {
+      setCreatingApplication(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-primary-50 dark:bg-primary-900 transition-colors">
       {/* Header */}
@@ -97,8 +252,8 @@ function JobsPageContent() {
                   Applications
                 </button>
                 <span className="px-3 py-2 text-sm font-medium text-primary-900 dark:text-primary-50 bg-primary-100 dark:bg-primary-700 rounded-lg flex items-center gap-2">
-                  <Briefcase className="w-4 h-4" />
-                  Jobs
+                  <Target className="w-4 h-4" />
+                  Matching
                 </span>
               </nav>
             </div>
@@ -196,7 +351,7 @@ function JobsPageContent() {
                 <p className="text-2xl font-semibold text-primary-900 dark:text-primary-50">
                   {stats.total}
                 </p>
-                <p className="text-sm text-primary-500 dark:text-primary-400">Total Jobs</p>
+                <p className="text-sm text-primary-500 dark:text-primary-400">Imported</p>
               </div>
             </div>
           </div>
@@ -247,12 +402,12 @@ function JobsPageContent() {
         {/* Quick Actions */}
         {stats.total === 0 && (
           <div className="bg-white dark:bg-primary-800 rounded-xl border border-primary-200 dark:border-primary-700 p-8 mb-8 text-center transition-colors">
-            <Briefcase className="w-12 h-12 text-primary-300 dark:text-primary-600 mx-auto mb-4" />
+            <Target className="w-12 h-12 text-primary-300 dark:text-primary-600 mx-auto mb-4" />
             <h2 className="text-lg font-semibold text-primary-900 dark:text-primary-50 mb-2">
-              Start Tracking Your Job Search
+              Evaluate jobs before you apply.
             </h2>
             <p className="text-primary-500 dark:text-primary-400 mb-6 max-w-md mx-auto">
-              Import job descriptions from LinkedIn, Indeed, or any job board. Our AI will analyze them against your profile and preferences.
+              Import a job description to see how it aligns with your profile, skills, and preferences.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
@@ -282,6 +437,7 @@ function JobsPageContent() {
           onAnalyze={handleAnalyze}
           onSave={handleSave}
           onDismiss={handleDismiss}
+          onApply={handleApply}
         />
       </main>
 
@@ -291,6 +447,36 @@ function JobsPageContent() {
         onClose={() => setShowImportModal(false)}
         onJobImported={handleJobImported}
       />
+
+      {/* Application Modal */}
+      {selectedJobForApply && (
+        <NewApplicationModal
+          isOpen={showApplicationModal}
+          onClose={() => {
+            setShowApplicationModal(false);
+            setSelectedJobForApply(null);
+          }}
+          onCreate={handleCreateApplication}
+          templates={[]}
+          prefilledJob={{
+            company: selectedJobForApply.company,
+            role: selectedJobForApply.title,
+            jobDescription: selectedJobForApply.description || '',
+            jobUrl: selectedJobForApply.sourceUrl || undefined,
+          }}
+        />
+      )}
+
+      {/* Generating CV Overlay */}
+      {creatingApplication && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+          <div className="bg-white dark:bg-primary-800 rounded-xl p-8 flex flex-col items-center gap-4 shadow-xl">
+            <div className="spinner w-10 h-10"></div>
+            <p className="text-primary-700 dark:text-primary-300 font-medium">Generating your CV...</p>
+            <p className="text-sm text-primary-500 dark:text-primary-400">This may take a moment</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -57,10 +57,12 @@ IMPORTANT EXTRACTION RULES:
 
 SALARY RATE TYPE DETECTION:
 - "annual": regular salary (yearly amount, common for CDI/CDD/full-time)
+- "monthly": per-month salary (€/mois, $/month, "mensuel", "par mois", "monthly salary")
 - "hourly": per-hour rate (€/h, $/h, "per hour", "hourly rate")
 - "daily": per-day rate (TJM, "par jour", "€/day", "daily rate", common for freelance)
 
 Look for indicators like:
+- "2100€/mois", "3000$/month", "mensuel", "salaire mensuel" → monthly
 - "30€/h", "50$/hour" → hourly
 - "400€/jour", "TJM 500€", "daily rate" → daily
 - "45k", "60000€/an", "annual salary" → annual
@@ -78,7 +80,7 @@ Respond ONLY with a valid JSON object in this exact format:
   "salaryMin": number or null,
   "salaryMax": number or null,
   "salaryCurrency": "EUR" | "USD" | "GBP" | "CHF" or null,
-  "salaryRateType": "annual" | "hourly" | "daily" or null,
+  "salaryRateType": "annual" | "monthly" | "hourly" | "daily" or null,
   "hoursPerWeek": number or null,
   "presenceType": "full_remote" | "hybrid" | "on_site" or null,
   "contractType": "string or null (e.g., CDI, CDD, Freelance, Full-time, Part-time)",
@@ -89,8 +91,9 @@ Respond ONLY with a valid JSON object in this exact format:
 
 Notes:
 - For presenceType: use "full_remote" for 100% remote, "hybrid" for partial remote, "on_site" for office-only
-- salaryRateType: Use "hourly" for per-hour rates, "daily" for per-day/TJM rates, "annual" for yearly salaries
+- salaryRateType: Use "hourly" for per-hour rates, "daily" for per-day/TJM rates, "monthly" for per-month salaries, "annual" for yearly salaries
 - If rate type is unclear and salary looks like a typical annual salary (>10000), assume "annual"
+- If salary is between 1000-9999 and mentions "mois", "month", "mensuel", use "monthly"
 - If a salary range like "50-60k" is given, salaryMin=50000, salaryMax=60000 with salaryRateType="annual"
 - If "30-40€/h" is given, salaryMin=30, salaryMax=40 with salaryRateType="hourly"
 - Skills should be clean, normalized names without versions unless version is critical
@@ -206,5 +209,5 @@ function isValidPresenceType(value: unknown): value is PresenceType {
 }
 
 function isValidSalaryRateType(value: unknown): value is SalaryRateType {
-  return value === 'annual' || value === 'hourly' || value === 'daily';
+  return value === 'annual' || value === 'monthly' || value === 'hourly' || value === 'daily';
 }

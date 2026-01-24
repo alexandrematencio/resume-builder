@@ -7,8 +7,8 @@ import { z } from 'zod';
 import { Sliders } from 'lucide-react';
 import { useJobIntelligence } from '@/app/contexts/JobIntelligenceContext';
 import { COMMON_PERKS, PERK_LABELS, type RemotePreference } from '@/app/types';
-import SearchableMultiSelect, { SelectOption } from '@/app/components/SearchableMultiSelect';
-import { COUNTRIES, CITIES, getCityDisplayName } from '@/lib/location-data';
+import AutocompleteInput, { AutocompleteOption } from '@/app/components/AutocompleteInput';
+import { COUNTRIES, CITIES } from '@/lib/location-data';
 
 const jobPreferencesSchema = z.object({
   minSalary: z.number().nullable(),
@@ -41,7 +41,7 @@ export default function JobPreferencesForm({ onSaveStart, onSaveSuccess, onSaveE
   const [preferredPerks, setPreferredPerks] = useState<string[]>([]);
 
   // Memoized options for country and city selectors
-  const countryOptions: SelectOption[] = useMemo(() =>
+  const countryOptions: AutocompleteOption[] = useMemo(() =>
     COUNTRIES.map(country => ({
       value: country.name,
       label: country.name,
@@ -49,9 +49,9 @@ export default function JobPreferencesForm({ onSaveStart, onSaveSuccess, onSaveE
     []
   );
 
-  const cityOptions: SelectOption[] = useMemo(() =>
+  const cityOptions: AutocompleteOption[] = useMemo(() =>
     CITIES.map(city => ({
-      value: getCityDisplayName(city),
+      value: city.name,
       label: city.name,
       sublabel: city.country,
     })),
@@ -153,14 +153,13 @@ export default function JobPreferencesForm({ onSaveStart, onSaveSuccess, onSaveE
 
           {/* Countries */}
           <div>
-            <SearchableMultiSelect
+            <AutocompleteInput
+              multi
               label="Allowed Countries"
               options={countryOptions}
-              selected={allowedCountries}
+              value={allowedCountries}
               onChange={setAllowedCountries}
-              placeholder="Select countries..."
-              searchPlaceholder="Type to search countries (e.g., France, Germany...)"
-              emptyMessage="No countries found"
+              placeholder="Type to search countries (e.g., France, Germany...)"
             />
             {allowedCountries.length === 0 && (
               <p className="text-sm text-primary-500 dark:text-primary-400 mt-2">
@@ -171,14 +170,13 @@ export default function JobPreferencesForm({ onSaveStart, onSaveSuccess, onSaveE
 
           {/* Cities */}
           <div>
-            <SearchableMultiSelect
+            <AutocompleteInput
+              multi
               label="Allowed Cities"
               options={cityOptions}
-              selected={allowedCities}
+              value={allowedCities}
               onChange={setAllowedCities}
-              placeholder="Select cities..."
-              searchPlaceholder="Type to search cities (e.g., Paris, Berlin...)"
-              emptyMessage="No cities found"
+              placeholder="Type to search cities (e.g., Paris, Berlin...)"
             />
             {allowedCities.length === 0 && (
               <p className="text-sm text-primary-500 dark:text-primary-400 mt-2">

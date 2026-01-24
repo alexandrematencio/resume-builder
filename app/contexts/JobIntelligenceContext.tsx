@@ -363,6 +363,8 @@ export function JobIntelligenceProvider({ children }: { children: ReactNode }) {
         perksMatchCount: result.result.perksMatchCount,
         overallScore: result.result.overallScore,
         aiInsights: result.result.aiInsights,
+        matchedSkills: result.result.matchedSkills,
+        missingSkills: result.result.missingSkills,
         status: 'analyzed',
         analyzedAt: new Date().toISOString(),
       });

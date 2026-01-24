@@ -7,17 +7,22 @@ import { useProfile } from '@/app/contexts/ProfileContext';
 import { useJobIntelligence, JobIntelligenceProvider } from '@/app/contexts/JobIntelligenceContext';
 import { ThemeToggle } from '@/app/components/ThemeToggle';
 import JobIntelligenceView from '@/app/components/jobs/JobIntelligenceView';
+import NewApplicationModal from '@/app/components/NewApplicationModal';
 import { Briefcase, User, LogOut, ChevronDown } from 'lucide-react';
-import type { JobOffer } from '@/app/types';
+import type { JobOffer, Application, CVVersion, ApplicationStatus, ParsedJobContext } from '@/app/types';
+import { recalculateWithDismissals } from '@/lib/job-filter-service';
+import { loadApplications, saveAllApplications } from '@/lib/supabase-db';
 
 function JobDetailContent() {
   const router = useRouter();
   const params = useParams();
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile, isComplete: profileComplete } = useProfile();
-  const { jobOffers, jobOffersLoading, analyzeJobOffer, updateJobStatus, analyzing } = useJobIntelligence();
+  const { jobOffers, jobOffersLoading, analyzeJobOffer, updateJobStatus, modifyJobOffer, preferences, analyzing } = useJobIntelligence();
   const [job, setJob] = useState<JobOffer | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [creatingApplication, setCreatingApplication] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const jobId = params.id as string;
@@ -139,10 +144,153 @@ function JobDetailContent() {
   };
 
   const handleApply = async () => {
-    const success = await updateJobStatus(jobId, 'applied');
-    if (!success) {
-      console.error('Failed to mark job as applied - check console for details');
-      alert('Failed to update job status. Please try again.');
+    setShowApplicationModal(true);
+  };
+
+  const handleCreateApplication = async (data: {
+    company: string;
+    role: string;
+    jobDescription: string;
+    jobUrl?: string;
+    parsedJobContext?: ParsedJobContext;
+    cvData?: {
+      name: string;
+      email: string;
+      phone: string;
+      address: string;
+      age?: string;
+      languages?: string;
+      portfolio?: string;
+      summary: string;
+      experience: string;
+      skills: string;
+      education: string;
+      projects?: string;
+    };
+    useExistingTemplate: boolean;
+    selectedTemplateId?: string;
+  }) => {
+    if (!user) return;
+    setCreatingApplication(true);
+
+    try {
+      // Generate CV via API
+      const nameParts = (data.cvData?.name || '').trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      const prompt = `You are an expert resume writer. Create a professional, ATS-optimized resume tailored for this job.
+
+CANDIDATE INFORMATION:
+Name: ${data.cvData?.name || ''}
+Email: ${data.cvData?.email || ''}
+Phone: ${data.cvData?.phone || ''}
+Location: ${data.cvData?.address || ''}
+${data.cvData?.age ? `Age: ${data.cvData.age}` : ''}
+${data.cvData?.languages ? `Languages: ${data.cvData.languages}` : ''}
+${data.cvData?.portfolio ? `Portfolio: ${data.cvData.portfolio}` : ''}
+
+PROFESSIONAL SUMMARY:
+${data.cvData?.summary || 'Create a compelling professional summary'}
+
+WORK EXPERIENCE:
+${data.cvData?.experience || ''}
+
+SKILLS:
+${data.cvData?.skills || ''}
+
+EDUCATION:
+${data.cvData?.education || ''}
+
+${data.cvData?.projects ? `KEY PROJECTS:\n${data.cvData.projects}` : ''}
+
+TARGET JOB DESCRIPTION:
+${data.jobDescription}
+${data.parsedJobContext ? `
+AI-PARSED JOB REQUIREMENTS:
+- Required Skills: ${data.parsedJobContext.requiredSkills.join(', ')}
+- Nice-to-Have: ${data.parsedJobContext.niceToHaveSkills.join(', ')}
+- Matched Skills: ${data.parsedJobContext.matchedSkills.join(', ')}
+- Missing Skills: ${data.parsedJobContext.missingSkills.join(', ')}
+
+TAILORING INSTRUCTIONS:
+- Prioritize experiences demonstrating REQUIRED skills
+- List matched required skills FIRST in skills section
+- Mirror job posting language in summary
+- Do NOT fabricate skills
+` : ''}
+CRITICAL: Respond with ONLY valid JSON:
+{
+  "personalInfo": { "name": "${data.cvData?.name || ''}", "firstName": "${firstName}", "lastName": "${lastName}", "age": ${data.cvData?.age || 'null'}, "languages": ${data.cvData?.languages ? `"${data.cvData.languages}"` : 'null'}, "address": "${data.cvData?.address || ''}", "email": "${data.cvData?.email || ''}", "phone": "${data.cvData?.phone || ''}", "portfolio": ${data.cvData?.portfolio ? `"${data.cvData.portfolio}"` : 'null'}, "photo": null },
+  "profile": { "text": "Professional summary", "availability": "Available" },
+  "skills": { "technical": [], "marketing": [], "soft": [] },
+  "experiences": [{ "id": "1", "company": "", "jobTitle": "", "period": "", "industry": "", "achievements": [] }],
+  "projects": [],
+  "education": [{ "id": "1", "institution": "", "years": "", "degree": "", "specialization": "" }]
+}
+
+REQUIREMENTS:
+- 4-6 experiences (reverse chronological), 2 achievements each
+- Categorize skills into technical/marketing/soft
+- Return ONLY JSON, no markdown`;
+
+      const response = await fetch('/api/generate-resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+      const responseData = await response.json();
+      let cvContent = responseData.resume?.trim() || '';
+      if (cvContent.startsWith('```json')) {
+        cvContent = cvContent.replace(/^```json\n/, '').replace(/\n```$/, '');
+      } else if (cvContent.startsWith('```')) {
+        cvContent = cvContent.replace(/^```\n/, '').replace(/\n```$/, '');
+      }
+      JSON.parse(cvContent); // Validate JSON
+
+      // Create application object
+      const firstCV: CVVersion = {
+        id: `cv-${Date.now()}`,
+        version: 1,
+        content: cvContent,
+        generatedBy: 'ai',
+        createdAt: Date.now(),
+      };
+
+      const newApp: Application = {
+        id: `app-${Date.now()}`,
+        company: data.company,
+        role: data.role,
+        jobDescription: data.jobDescription,
+        jobUrl: data.jobUrl,
+        cvVersions: [firstCV],
+        coverLetters: [],
+        status: 'draft' as ApplicationStatus,
+        statusHistory: [{ status: 'draft' as ApplicationStatus, timestamp: Date.now(), note: 'Created from job matching' }],
+        tracking: { followUpDates: [] },
+        createdAt: Date.now(),
+        notes: '',
+        tags: [],
+        isFavorite: false,
+      };
+
+      // Load existing applications, prepend new one, save
+      const existingApps = await loadApplications();
+      await saveAllApplications([newApp, ...existingApps]);
+
+      // Update job status to applied
+      await updateJobStatus(jobId, 'applied');
+
+      setShowApplicationModal(false);
+      router.push('/');
+    } catch (error) {
+      console.error('Failed to create application:', error);
+      alert('Failed to create application. Please try again.');
+    } finally {
+      setCreatingApplication(false);
     }
   };
 
@@ -152,6 +300,27 @@ function JobDetailContent() {
       console.error('Failed to archive job - check console for details');
       alert('Failed to archive job. Please try again.');
     }
+  };
+
+  const handleDismissRedFlag = async (flag: string) => {
+    if (!job) return;
+    const newDismissed = [...(job.dismissedRedFlags || []), flag];
+    const salaryBelowMin = !!(
+      preferences?.minSalary &&
+      job.salaryMax !== null &&
+      job.salaryMax !== undefined &&
+      job.salaryMax < preferences.minSalary
+    );
+    const newScore = recalculateWithDismissals(
+      job.overallScore || 0,
+      job.aiInsights?.redFlags || [],
+      newDismissed,
+      salaryBelowMin
+    );
+    await modifyJobOffer(job.id, {
+      dismissedRedFlags: newDismissed,
+      overallScore: newScore,
+    });
   };
 
   return (
@@ -262,9 +431,41 @@ function JobDetailContent() {
           onSave={handleSave}
           onApply={handleApply}
           onArchive={handleArchive}
+          onDismissRedFlag={handleDismissRedFlag}
           analyzing={analyzing}
         />
       </main>
+
+      {/* Application Modal */}
+      {job && (
+        <NewApplicationModal
+          isOpen={showApplicationModal}
+          onClose={() => setShowApplicationModal(false)}
+          onCreate={handleCreateApplication}
+          templates={[]}
+          prefilledJob={{
+            company: job.company,
+            role: job.title,
+            jobDescription: job.description || '',
+            jobUrl: job.sourceUrl || undefined,
+          }}
+        />
+      )}
+
+      {/* Generating CV Overlay */}
+      {creatingApplication && (
+        <div className="modal-backdrop z-50 flex items-center justify-center">
+          <div className="modal-content p-12 text-center max-w-md">
+            <div className="spinner w-16 h-16 mx-auto mb-6"></div>
+            <h3 className="text-2xl font-semibold text-primary-900 dark:text-primary-50 mb-2">
+              Generating Your CV
+            </h3>
+            <p className="text-primary-600 dark:text-primary-400">
+              AI is analyzing the job and creating a tailored resume
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

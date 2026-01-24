@@ -53,6 +53,10 @@ function getAIInsightsPrompt(
 - Languages: ${formatLanguages(profile.languages) || 'None specified'}
 - Education: ${profile.education?.[0]?.degree || 'Not specified'} in ${profile.education?.[0]?.field || 'Not specified'}
 
+## WORK EXPERIENCE
+${profile.workExperience?.map(exp => `- ${exp.title} at ${exp.company} (${exp.startDate} - ${exp.endDate || 'Present'})
+  Achievements: ${exp.achievements?.join('; ') || 'None listed'}`).join('\n') || 'None specified'}
+
 ## MATCH ANALYSIS
 - Skills Match: ${matchData.skillsMatchPercent}%
 - Matched Skills: ${matchData.matchedSkills.join(', ') || 'None'}
@@ -87,7 +91,9 @@ IMPORTANT:
 - Keep each point concise (1 sentence max)
 - If there are blockers, acknowledge them in the matchSummary
 - Don't make up information not present in the data
-- Focus on actionable, helpful insights`;
+- Focus on actionable, helpful insights
+- The candidate's profile may be in a different language than the job posting. Perform cross-language matching: treat descriptions in any language as equivalent when they describe the same skills (e.g., "encaissement" = "cash handling", "préparation de cocktails" = "cocktail preparation", "service en salle" = "table service")
+- Consider work experience achievements as direct evidence of skills, even if those skills are not explicitly listed in the Skills section`;
 }
 
 function calculateYearsOfExperience(workExperience?: { startDate: string; endDate?: string; current?: boolean }[]): number {
@@ -229,25 +235,34 @@ function generateFallbackInsights(matchData: MatchData): AIInsights {
   };
 }
 
-function getMatchedSkills(jobSkills: string[], userSkillNames: string[]): string[] {
+function buildProfileSearchTexts(profile: UserProfile): string[] {
+  const texts: string[] = profile.skills.map(s => s.name.toLowerCase());
+  for (const exp of profile.workExperience || []) {
+    if (exp.title) texts.push(exp.title.toLowerCase());
+    for (const achievement of exp.achievements || []) {
+      texts.push(achievement.toLowerCase());
+    }
+  }
+  return texts;
+}
+
+function skillMatchesProfile(normalizedSkill: string, profileTexts: string[]): boolean {
+  return profileTexts.some(
+    (text) => text.includes(normalizedSkill) || normalizedSkill.includes(text)
+  );
+}
+
+function getMatchedSkills(jobSkills: string[], profileTexts: string[]): string[] {
   return jobSkills.filter((skill) => {
     const normalizedSkill = skill.toLowerCase();
-    return userSkillNames.some(
-      (userSkill) =>
-        userSkill.toLowerCase().includes(normalizedSkill) ||
-        normalizedSkill.includes(userSkill.toLowerCase())
-    );
+    return skillMatchesProfile(normalizedSkill, profileTexts);
   });
 }
 
-function getMissingSkills(jobSkills: string[], userSkillNames: string[]): string[] {
+function getMissingSkills(jobSkills: string[], profileTexts: string[]): string[] {
   return jobSkills.filter((skill) => {
     const normalizedSkill = skill.toLowerCase();
-    return !userSkillNames.some(
-      (userSkill) =>
-        userSkill.toLowerCase().includes(normalizedSkill) ||
-        normalizedSkill.includes(userSkill.toLowerCase())
-    );
+    return !skillMatchesProfile(normalizedSkill, profileTexts);
   });
 }
 
@@ -268,7 +283,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeJo
 
     // Step 2: Calculate skills match
     const jobSkills = [...(jobOffer.requiredSkills || []), ...(jobOffer.niceToHaveSkills || [])];
-    const skillsMatchPercent = calculateSkillsMatch(jobSkills, userProfile.skills);
+    const skillsMatchPercent = calculateSkillsMatch(jobSkills, userProfile.skills, userProfile.workExperience);
 
     // Step 3: Calculate perks match
     const perksMatchCount = calculatePerksMatch(jobOffer.perks || [], preferences.preferredPerks);
@@ -292,14 +307,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeJo
     );
 
     // Step 5: Prepare match data for AI insights
-    const userSkillNames = userProfile.skills.map(s => s.name);
+    const profileTexts = buildProfileSearchTexts(userProfile);
     const matchData: MatchData = {
       skillsMatchPercent,
       perksMatchCount,
       overallScore,
       blockerResult,
-      matchedSkills: getMatchedSkills(jobSkills, userSkillNames),
-      missingSkills: getMissingSkills(jobSkills, userSkillNames),
+      matchedSkills: getMatchedSkills(jobSkills, profileTexts),
+      missingSkills: getMissingSkills(jobSkills, profileTexts),
     };
 
     // Step 6: Generate AI insights
@@ -312,6 +327,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeJo
       perksMatchCount,
       overallScore,
       aiInsights,
+      matchedSkills: matchData.matchedSkills,
+      missingSkills: matchData.missingSkills,
     };
 
     return NextResponse.json({
