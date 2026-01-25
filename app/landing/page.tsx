@@ -8,6 +8,7 @@ import {
   Sparkles,
   Filter,
   Target,
+  BarChart2,
   CheckCircle,
   ArrowRight,
   Zap,
@@ -124,7 +125,7 @@ export default function LandingPage() {
               <div className="absolute -bottom-6 -left-6 bg-white dark:bg-primary-800 rounded-lg shadow-lg border border-primary-200 dark:border-primary-700 p-4 w-48">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-success-100 dark:bg-success-900/30 rounded-full flex items-center justify-center">
-                    <Target className="w-5 h-5 text-success-600 dark:text-success-400" />
+                    <BarChart2 className="w-5 h-5 text-success-600 dark:text-success-400" />
                   </div>
                   <div>
                     <p className="text-2xl font-semibold text-primary-900 dark:text-primary-50">87%</p>

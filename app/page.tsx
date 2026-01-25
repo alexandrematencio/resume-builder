@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, User, LogOut, ChevronDown, Edit2, Send, Calendar, Star, Ban, Trash2, FileText, Target, Clock, Bell, Copy, CalendarPlus, ExternalLink, CheckCircle, X, HelpCircle } from 'lucide-react';
+import { Plus, User, LogOut, ChevronDown, Edit2, Send, Calendar, Star, Ban, Trash2, FileText, Target, Clock, Bell, Copy, CalendarPlus, ExternalLink, CheckCircle, X, HelpCircle, MapPin, Menu, Activity } from 'lucide-react';
 import Button from '@/app/components/Button';
+import { SkeletonList } from '@/app/components/SkeletonCard';
+import { SkeletonStatsGrid } from '@/app/components/SkeletonStatCard';
 import { ToastContainer } from '@/app/components/Toast';
 import NewApplicationModal from '@/app/components/NewApplicationModal';
 import CVDetailModal from '@/app/components/CVDetailModal';
@@ -41,7 +43,9 @@ export default function JobHunterPro() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileNav, setShowMobileNav] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const mobileNavRef = useRef<HTMLDivElement>(null);
   const [toasts, setToasts] = useState<ToastType[]>([]);
 
   const [showNewAppModal, setShowNewAppModal] = useState(false);
@@ -68,6 +72,9 @@ export default function JobHunterPro() {
   // Saved job offers count for Matching badge
   const [savedJobsCount, setSavedJobsCount] = useState(0);
 
+  // Data loading state
+  const [dataLoading, setDataLoading] = useState(true);
+
   useEffect(() => {
     loadData();
     // Load saved jobs count for badge
@@ -76,11 +83,14 @@ export default function JobHunterPro() {
     }).catch(() => {});
   }, []);
 
-  // Close user menu when clicking outside
+  // Close user menu and mobile nav when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false);
+      }
+      if (mobileNavRef.current && !mobileNavRef.current.contains(event.target as Node)) {
+        setShowMobileNav(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -115,6 +125,7 @@ export default function JobHunterPro() {
   }, []);
 
   const loadData = async () => {
+    setDataLoading(true);
     try {
       // First, try to migrate from localStorage if needed
       await migrateFromLocalStorage();
@@ -129,6 +140,8 @@ export default function JobHunterPro() {
       setTemplates(temps);
     } catch (error) {
       console.error('Failed to load data:', error);
+    } finally {
+      setDataLoading(false);
     }
   };
 
@@ -690,7 +703,8 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
       const updatedApps = [newApp, ...applications];
       saveApplications(updatedApps);
       setShowNewAppModal(false);
-      
+      setSelectedApp(newApp);
+
       addToast('success', `CV created for ${data.company}`);
     } catch (error) {
       addToast('error', 'Failed to generate CV. Please try again.');
@@ -1380,13 +1394,14 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
           <div className="flex items-center gap-3 sm:gap-6">
             <div className="flex items-center gap-2 sm:gap-4">
               <img src="/logo.svg" alt="Logo" className="h-8 sm:h-10 w-auto" />
-              <nav className="flex items-center gap-1">
-                <span className="px-2 sm:px-3 py-2 text-sm font-medium text-primary-900 dark:text-primary-50 bg-primary-100 dark:bg-primary-700 rounded-lg whitespace-nowrap">
+              {/* Desktop nav */}
+              <nav className="hidden sm:flex items-center gap-1">
+                <span className="px-3 py-2 text-sm font-medium text-primary-900 dark:text-primary-50 bg-primary-100 dark:bg-primary-700 rounded-lg whitespace-nowrap">
                   Apply
                 </span>
                 <button
                   onClick={() => router.push('/jobs')}
-                  className="px-2 sm:px-3 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-100 hover:bg-primary-100 dark:hover:bg-primary-700 rounded-lg transition-colors flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
+                  className="px-3 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-100 hover:bg-primary-100 dark:hover:bg-primary-700 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
                 >
                   <Target className="w-4 h-4 flex-shrink-0" />
                   Matching
@@ -1397,6 +1412,37 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
                   )}
                 </button>
               </nav>
+              {/* Mobile nav dropdown */}
+              <div className="relative sm:hidden" ref={mobileNavRef}>
+                <button
+                  onClick={() => setShowMobileNav(!showMobileNav)}
+                  className="p-2 text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-100 hover:bg-primary-100 dark:hover:bg-primary-700 rounded-lg transition-colors"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+                {showMobileNav && (
+                  <div className="absolute left-0 top-full mt-1 w-48 bg-white dark:bg-primary-800 rounded-lg shadow-lg border border-primary-200 dark:border-primary-700 py-1 z-50">
+                    <span className="block px-4 py-2 text-sm font-medium text-primary-900 dark:text-primary-50 bg-primary-100 dark:bg-primary-700">
+                      Apply
+                    </span>
+                    <button
+                      onClick={() => {
+                        setShowMobileNav(false);
+                        router.push('/jobs');
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-700 flex items-center gap-2"
+                    >
+                      <Target className="w-4 h-4" />
+                      Matching
+                      {savedJobsCount > 0 && (
+                        <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-accent-600 text-white text-xs font-medium">
+                          {savedJobsCount}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
@@ -1484,40 +1530,46 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Section Title */}
+        <h1 className="text-2xl font-semibold text-primary-900 dark:text-primary-50 mb-6">Apply to job offers</h1>
+
         {/* Dashboard KPIs */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
-          {/* Needs attention */}
-          <div className="stat-card">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-primary-600 dark:text-primary-400 uppercase tracking-wide">Attention</span>
-              <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-primary-400" aria-hidden="true" />
+        {dataLoading ? (
+          <SkeletonStatsGrid count={3} />
+        ) : (
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
+            {/* Needs attention */}
+            <div className="stat-card">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-primary-600 dark:text-primary-400 uppercase tracking-wide">Attention</span>
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-primary-400" aria-hidden="true" />
+              </div>
+              <div className="text-2xl sm:text-3xl font-semibold text-primary-900 dark:text-primary-50 mb-1">
+                {needsAttention}
+              </div>
+              <div className="text-xs text-primary-500 dark:text-primary-400 truncate">
+                {needsAttention === 0 ? 'All clear' : `${needsAttention} to review`}
+              </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-semibold text-primary-900 dark:text-primary-50 mb-1">
-              {needsAttention}
-            </div>
-            <div className="text-xs text-primary-500 dark:text-primary-400 truncate">
-              {needsAttention === 0 ? 'All clear' : `${needsAttention} to review`}
-            </div>
-          </div>
 
-          {/* In progress */}
-          <div className="stat-card">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-info-600 dark:text-info-400 uppercase tracking-wide">Active</span>
-              <Target className="w-4 h-4 sm:w-5 sm:h-5 text-info-500" aria-hidden="true" />
+            {/* In progress */}
+            <div className="stat-card">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-info-600 dark:text-info-400 uppercase tracking-wide">Active</span>
+                <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-info-500" aria-hidden="true" />
+              </div>
+              <div className="text-2xl sm:text-3xl font-semibold text-primary-900 dark:text-primary-50 mb-1">
+                {inProgressCount}
+              </div>
+              <div className="text-xs text-primary-500 dark:text-primary-400 truncate">
+                {daysSinceActivity !== null ? `Last ${daysSinceActivity}d ago` : 'No activity'}
+              </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-semibold text-primary-900 dark:text-primary-50 mb-1">
-              {inProgressCount}
-            </div>
-            <div className="text-xs text-primary-500 dark:text-primary-400 truncate">
-              {daysSinceActivity !== null ? `Last ${daysSinceActivity}d ago` : 'No activity'}
-            </div>
-          </div>
 
-          {/* Responses received */}
-          <div className="stat-card">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-success-600 dark:text-success-400 uppercase tracking-wide">Responses</span>
+            {/* Responses received */}
+            <div className="stat-card">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-success-600 dark:text-success-400 uppercase tracking-wide">Responses</span>
               <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-success-500" aria-hidden="true" />
             </div>
             <div className="text-2xl sm:text-3xl font-semibold text-primary-900 dark:text-primary-50 mb-1">
@@ -1528,6 +1580,7 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
             </div>
           </div>
         </div>
+        )}
 
         {/* Offers Banner */}
         {stats.offer > 0 && (
@@ -1555,7 +1608,9 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
         </div>
 
         {/* Applications List */}
-        {sortedApps.length === 0 ? (
+        {dataLoading ? (
+          <SkeletonList variant="application" count={4} />
+        ) : sortedApps.length === 0 ? (
           <div className="bg-white dark:bg-primary-800 rounded-lg shadow-lg p-12 text-center border border-primary-200 dark:border-primary-700">
             <FileText className="w-16 h-16 mx-auto mb-6 text-primary-300 dark:text-primary-600" aria-hidden="true" />
             <h2 className="text-2xl font-semibold text-primary-900 dark:text-primary-50 mb-3">
@@ -1641,7 +1696,7 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
                               {app.tracking.interviewScheduled.location && (
                                 <>
                                   <span className="text-primary-300 dark:text-primary-600">|</span>
-                                  <Target className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+                                  <MapPin className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
                                   <span className="truncate max-w-[200px]">{app.tracking.interviewScheduled.location}</span>
                                 </>
                               )}
@@ -1877,7 +1932,7 @@ Génère maintenant la lettre de motivation en respectant STRICTEMENT le format:
                   </div>
                   {applications.find(a => a.id === interviewAppId)!.tracking.interviewScheduled!.location && (
                     <div className="flex items-center gap-3">
-                      <Target className="w-5 h-5 text-accent-500" aria-hidden="true" />
+                      <MapPin className="w-5 h-5 text-accent-500" aria-hidden="true" />
                       <span className="flex-1 text-primary-700 dark:text-primary-300">{applications.find(a => a.id === interviewAppId)!.tracking.interviewScheduled!.location}</span>
                       <button
                         onClick={() => copyToClipboard(applications.find(a => a.id === interviewAppId)!.tracking.interviewScheduled!.location!)}

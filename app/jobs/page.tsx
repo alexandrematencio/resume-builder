@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Briefcase, TrendingUp, AlertTriangle, Star, Target, FileText, User, LogOut, ChevronDown } from 'lucide-react';
+import { Plus, Briefcase, TrendingUp, AlertTriangle, Star, Target, FileText, User, LogOut, ChevronDown, Menu } from 'lucide-react';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useProfile } from '@/app/contexts/ProfileContext';
 import { useJobIntelligence, JobIntelligenceProvider } from '@/app/contexts/JobIntelligenceContext';
@@ -32,13 +32,18 @@ function JobsPageContent() {
   const [selectedJobForApply, setSelectedJobForApply] = useState<JobOffer | null>(null);
   const [creatingApplication, setCreatingApplication] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileNav, setShowMobileNav] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const mobileNavRef = useRef<HTMLDivElement>(null);
 
-  // Close user menu when clicking outside
+  // Close user menu and mobile nav when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false);
+      }
+      if (mobileNavRef.current && !mobileNavRef.current.contains(event.target as Node)) {
+        setShowMobileNav(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -77,6 +82,10 @@ function JobsPageContent() {
   };
 
   const handleDismiss = async (jobId: string) => {
+    await updateJobStatus(jobId, 'archived');
+  };
+
+  const handleArchive = async (jobId: string) => {
     await updateJobStatus(jobId, 'archived');
   };
 
@@ -244,18 +253,45 @@ REQUIREMENTS:
           <div className="flex items-center gap-3 sm:gap-6">
             <div className="flex items-center gap-2 sm:gap-4">
               <img src="/logo.svg" alt="Logo" className="h-8 sm:h-10 w-auto" />
-              <nav className="flex items-center gap-1">
+              {/* Desktop nav */}
+              <nav className="hidden sm:flex items-center gap-1">
                 <button
                   onClick={() => router.push('/')}
-                  className="px-2 sm:px-3 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-100 hover:bg-primary-100 dark:hover:bg-primary-700 rounded-lg transition-colors whitespace-nowrap"
+                  className="px-3 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-100 hover:bg-primary-100 dark:hover:bg-primary-700 rounded-lg transition-colors whitespace-nowrap"
                 >
                   Apply
                 </button>
-                <span className="px-2 sm:px-3 py-2 text-sm font-medium text-primary-900 dark:text-primary-50 bg-primary-100 dark:bg-primary-700 rounded-lg flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
+                <span className="px-3 py-2 text-sm font-medium text-primary-900 dark:text-primary-50 bg-primary-100 dark:bg-primary-700 rounded-lg flex items-center gap-2 whitespace-nowrap">
                   <Target className="w-4 h-4 flex-shrink-0" />
                   Matching
                 </span>
               </nav>
+              {/* Mobile nav dropdown */}
+              <div className="relative sm:hidden" ref={mobileNavRef}>
+                <button
+                  onClick={() => setShowMobileNav(!showMobileNav)}
+                  className="p-2 text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-100 hover:bg-primary-100 dark:hover:bg-primary-700 rounded-lg transition-colors"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+                {showMobileNav && (
+                  <div className="absolute left-0 top-full mt-1 w-48 bg-white dark:bg-primary-800 rounded-lg shadow-lg border border-primary-200 dark:border-primary-700 py-1 z-50">
+                    <button
+                      onClick={() => {
+                        setShowMobileNav(false);
+                        router.push('/');
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-700"
+                    >
+                      Apply
+                    </button>
+                    <span className="block px-4 py-2 text-sm font-medium text-primary-900 dark:text-primary-50 bg-primary-100 dark:bg-primary-700 flex items-center gap-2">
+                      <Target className="w-4 h-4" />
+                      Matching
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
@@ -343,6 +379,9 @@ REQUIREMENTS:
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Section Title */}
+        <h1 className="text-2xl font-semibold text-primary-900 dark:text-primary-50 mb-6">Matching</h1>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white dark:bg-primary-800 rounded-xl border border-primary-200 dark:border-primary-700 p-4 transition-colors">
@@ -382,7 +421,7 @@ REQUIREMENTS:
                 <p className="text-2xl font-semibold text-primary-900 dark:text-primary-50">
                   {stats.blocked}
                 </p>
-                <p className="text-sm text-primary-500 dark:text-primary-400">Blocked</p>
+                <p className="text-sm text-primary-500 dark:text-primary-400">Warning</p>
               </div>
             </div>
           </div>
@@ -440,6 +479,7 @@ REQUIREMENTS:
           onAnalyze={handleAnalyze}
           onSave={handleSave}
           onDismiss={handleDismiss}
+          onArchive={handleArchive}
           onApply={handleApply}
         />
       </main>

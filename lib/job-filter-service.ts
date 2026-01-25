@@ -442,7 +442,7 @@ export interface MatchData {
   missingSkills: string[];
 }
 
-function getMatchedSkills(jobSkills: string[], userSkills: Skill[], workExperience?: WorkExperience[]): string[] {
+export function getMatchedSkills(jobSkills: string[], userSkills: Skill[], workExperience?: WorkExperience[]): string[] {
   const { skillNames, experienceTexts } = buildProfileTexts(userSkills, workExperience);
   const allTexts = [...skillNames, ...experienceTexts];
   return jobSkills.filter((skill) => {
@@ -453,7 +453,7 @@ function getMatchedSkills(jobSkills: string[], userSkills: Skill[], workExperien
   });
 }
 
-function getMissingSkills(jobSkills: string[], userSkills: Skill[], workExperience?: WorkExperience[]): string[] {
+export function getMissingSkills(jobSkills: string[], userSkills: Skill[], workExperience?: WorkExperience[]): string[] {
   const matched = getMatchedSkills(jobSkills, userSkills, workExperience);
   return jobSkills.filter(skill => !matched.includes(skill));
 }

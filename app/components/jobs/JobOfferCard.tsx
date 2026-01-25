@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Clock, Building2, Briefcase, Ban, Sparkles, Star, CheckCircle, Archive, X, FileText } from 'lucide-react';
+import { MapPin, Clock, Building2, Briefcase, AlertTriangle, Ban, Sparkles, Star, CheckCircle, Archive, X, FileText } from 'lucide-react';
 import Link from 'next/link';
 import type { JobOffer } from '@/app/types';
 import { interpretScore } from '@/lib/job-filter-service';
@@ -10,6 +10,7 @@ interface JobOfferCardProps {
   onAnalyze?: (jobId: string) => void;
   onSave?: (jobId: string) => void;
   onDismiss?: (jobId: string) => void;
+  onArchive?: (jobId: string) => void;
   onApply?: (job: JobOffer) => void;
   analyzing?: boolean;
 }
@@ -19,6 +20,7 @@ export default function JobOfferCard({
   onAnalyze,
   onSave,
   onDismiss,
+  onArchive,
   onApply,
   analyzing = false,
 }: JobOfferCardProps) {
@@ -82,7 +84,7 @@ export default function JobOfferCard({
       aria-label={`${job.title} at ${job.company}`}
       className={`relative rounded-xl border transition-all motion-reduce:transition-none ${
         job.isBlocked
-          ? 'bg-white dark:bg-primary-800 border-error-300 dark:border-error-700 opacity-60 hover:shadow-md'
+          ? 'bg-white dark:bg-primary-800 border-warning-300 dark:border-warning-700 opacity-75 hover:shadow-md'
           : isArchived
           ? 'bg-primary-50/50 dark:bg-primary-900/50 border-primary-300 dark:border-primary-600 opacity-80 hover:opacity-90 hover:shadow-sm'
           : 'bg-white dark:bg-primary-800 border-primary-200 dark:border-primary-700 hover:shadow-md hover:border-primary-300 dark:hover:border-primary-600'
@@ -112,9 +114,9 @@ export default function JobOfferCard({
                 </span>
               )}
               {job.isBlocked && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-error-100 dark:bg-error-900/30 text-error-700 dark:text-error-300">
-                  <Ban className="w-3 h-3" />
-                  Blocked
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300">
+                  <AlertTriangle className="w-3 h-3" />
+                  Warning
                 </span>
               )}
             </div>
@@ -220,8 +222,8 @@ export default function JobOfferCard({
 
         {/* Block Reasons */}
         {job.isBlocked && job.blockReasons.length > 0 && (
-          <div className="mt-3 p-2 bg-error-50 dark:bg-error-900/20 rounded-lg">
-            <p className="text-xs text-error-700 dark:text-error-300">
+          <div className="mt-3 p-2 bg-warning-50 dark:bg-warning-900/20 rounded-lg">
+            <p className="text-xs text-warning-700 dark:text-warning-300">
               {job.blockReasons.join(' • ')}
             </p>
           </div>
@@ -229,7 +231,7 @@ export default function JobOfferCard({
       </Link>
 
       {/* Actions — icon-only, bottom-right */}
-      {((!hasScore && onAnalyze && !isArchived) || (onSave && job.status !== 'saved' && job.status !== 'applied' && job.status !== 'archived') || (onDismiss && job.status !== 'archived') || (onApply && job.status === 'saved' && hasScore)) && (
+      {((!hasScore && onAnalyze && !isArchived) || (onSave && job.status !== 'saved' && job.status !== 'applied' && job.status !== 'archived') || (onDismiss && job.status !== 'archived') || (onArchive && job.isBlocked && job.status !== 'archived') || (onApply && job.status === 'saved' && hasScore)) && (
         <div className="absolute bottom-3 right-3 flex items-center gap-1 z-10">
           {onApply && job.status === 'saved' && hasScore && (
             <button
@@ -272,6 +274,16 @@ export default function JobOfferCard({
             >
               <X className="w-3.5 h-3.5" />
               Dismiss
+            </button>
+          )}
+          {onArchive && job.isBlocked && job.status !== 'archived' && (
+            <button
+              onClick={(e) => { e.preventDefault(); onArchive(job.id); }}
+              title="Archive"
+              className="inline-flex items-center gap-1 px-2 py-1 text-xs text-primary-400 dark:text-primary-500 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-700 rounded-md transition-colors"
+            >
+              <Archive className="w-3.5 h-3.5" />
+              Archive
             </button>
           )}
         </div>

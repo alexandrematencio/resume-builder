@@ -11,6 +11,8 @@ import {
   calculateSkillsMatch,
   calculatePerksMatch,
   calculateOverallScore,
+  getMatchedSkills,
+  getMissingSkills,
   type MatchData,
 } from '@/lib/job-filter-service';
 
@@ -235,36 +237,6 @@ function generateFallbackInsights(matchData: MatchData): AIInsights {
   };
 }
 
-function buildProfileSearchTexts(profile: UserProfile): string[] {
-  const texts: string[] = profile.skills.map(s => s.name.toLowerCase());
-  for (const exp of profile.workExperience || []) {
-    if (exp.title) texts.push(exp.title.toLowerCase());
-    for (const achievement of exp.achievements || []) {
-      texts.push(achievement.toLowerCase());
-    }
-  }
-  return texts;
-}
-
-function skillMatchesProfile(normalizedSkill: string, profileTexts: string[]): boolean {
-  return profileTexts.some(
-    (text) => text.includes(normalizedSkill) || normalizedSkill.includes(text)
-  );
-}
-
-function getMatchedSkills(jobSkills: string[], profileTexts: string[]): string[] {
-  return jobSkills.filter((skill) => {
-    const normalizedSkill = skill.toLowerCase();
-    return skillMatchesProfile(normalizedSkill, profileTexts);
-  });
-}
-
-function getMissingSkills(jobSkills: string[], profileTexts: string[]): string[] {
-  return jobSkills.filter((skill) => {
-    const normalizedSkill = skill.toLowerCase();
-    return !skillMatchesProfile(normalizedSkill, profileTexts);
-  });
-}
 
 export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeJobResponse>> {
   try {
@@ -307,14 +279,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeJo
     );
 
     // Step 5: Prepare match data for AI insights
-    const profileTexts = buildProfileSearchTexts(userProfile);
     const matchData: MatchData = {
       skillsMatchPercent,
       perksMatchCount,
       overallScore,
       blockerResult,
-      matchedSkills: getMatchedSkills(jobSkills, profileTexts),
-      missingSkills: getMissingSkills(jobSkills, profileTexts),
+      matchedSkills: getMatchedSkills(jobSkills, userProfile.skills, userProfile.workExperience),
+      missingSkills: getMissingSkills(jobSkills, userProfile.skills, userProfile.workExperience),
     };
 
     // Step 6: Generate AI insights

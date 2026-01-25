@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, FileText, User, Briefcase, Link as LinkIcon, Sparkles, Plus, Loader2, Zap, Target, ChevronDown, ChevronUp, MapPin, Clock, AlertCircle, Upload, ClipboardList, CheckCircle, Trash2, Pencil } from 'lucide-react';
+import { X, FileText, User, Briefcase, Link as LinkIcon, Sparkles, Plus, Loader2, Zap, FilePlus, Lightbulb, ChevronDown, ChevronUp, MapPin, Clock, AlertCircle, Upload, ClipboardList, CheckCircle, Trash2, Pencil } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import Button from './Button';
 import { Template, ParsedJobContext, Language, LanguageProficiency, PortfolioLink, Certification } from '../types';
@@ -921,7 +921,7 @@ export default function NewApplicationModal({
           <div className="flex items-center justify-between mb-3">
             <div>
               <h2 className="text-2xl font-semibold flex items-center gap-2">
-                <Target className="w-6 h-6" aria-hidden="true" />
+                <FilePlus className="w-6 h-6" aria-hidden="true" />
                 New Application
               </h2>
               <p className="text-white/90 mt-1 text-sm">
@@ -1144,7 +1144,7 @@ Requirements:
                           className="w-full flex items-center justify-between px-4 py-2.5 bg-accent-50 dark:bg-accent-900/30 text-sm font-medium text-accent-700 dark:text-accent-300"
                         >
                           <span className="flex items-center gap-2">
-                            <Target className="w-4 h-4" />
+                            <Lightbulb className="w-4 h-4" />
                             Job Insights
                             {parsedJobContext.requiredSkills.length > 0 && (
                               <span className="text-xs px-2 py-0.5 rounded-full bg-accent-100 dark:bg-accent-800 text-accent-600 dark:text-accent-400">

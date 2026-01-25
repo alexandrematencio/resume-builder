@@ -18,6 +18,7 @@ import {
   FileText,
   Sparkles,
   Loader2,
+  X,
   XCircle,
   TrendingUp,
   Shield,
@@ -36,6 +37,7 @@ interface JobIntelligenceViewProps {
   onApply: () => Promise<void>;
   onArchive: () => Promise<void>;
   onDismissRedFlag?: (flag: string) => Promise<void>;
+  onDismissWarning?: () => Promise<void>;
   analyzing?: boolean;
 }
 
@@ -47,30 +49,21 @@ export default function JobIntelligenceView({
   onApply,
   onArchive,
   onDismissRedFlag,
+  onDismissWarning,
   analyzing = false,
 }: JobIntelligenceViewProps) {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const { profile } = useProfile();
   const { preferences } = useJobIntelligence();
 
-  // Compute skill categories client-side from requiredSkills + profile
-  // Uses substring matching (same logic as /api/analyze-job)
+  // Use server-provided matchedSkills and missingSkills (from job-filter-service.ts)
+  // which includes compound skill splitting, semantic matching, and cross-language equivalences
+  const matchedSkills = job.matchedSkills || [];
+  const missingSkills = job.missingSkills || [];
+
+  // Compute extra skills: user skills not required by the job
   const userSkillNames = profile?.skills?.map(s => s.name) || [];
   const allRequiredSkills = [...job.requiredSkills, ...job.niceToHaveSkills];
-
-  const profileTexts: string[] = [
-    ...(profile?.skills?.map(s => s.name.toLowerCase()) || []),
-    ...(profile?.workExperience?.map(exp => exp.title.toLowerCase()) || []),
-    ...(profile?.workExperience?.flatMap(exp => exp.achievements?.map(a => a.toLowerCase()) || []) || []),
-  ];
-
-  const skillMatchesProfile = (skill: string) => {
-    const normalized = skill.toLowerCase();
-    return profileTexts.some(text => text.includes(normalized) || normalized.includes(text));
-  };
-
-  const matchedSkills = allRequiredSkills.filter(skill => skillMatchesProfile(skill));
-  const missingSkills = allRequiredSkills.filter(skill => !skillMatchesProfile(skill));
   const extraSkills = userSkillNames.filter(name =>
     !allRequiredSkills.some(rs => {
       const a = rs.toLowerCase();
@@ -116,7 +109,7 @@ export default function JobIntelligenceView({
           className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-200 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
-          Back to Jobs
+          Back to Matching
         </button>
 
         {job.overallScore !== null && (
@@ -168,9 +161,18 @@ export default function JobIntelligenceView({
           {/* Status Badge */}
           <div className="flex items-center gap-2">
             {job.isBlocked && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-error-100 dark:bg-error-900/30 text-error-700 dark:text-error-300 text-sm">
-                <XCircle className="w-4 h-4" />
-                Blocked
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300 text-sm">
+                <AlertTriangle className="w-4 h-4" />
+                Warning
+                {onDismissWarning && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDismissWarning(); }}
+                    className="ml-1 hover:text-warning-900 dark:hover:text-warning-100 transition-colors"
+                    title="Dismiss warning"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </span>
             )}
             <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${
@@ -253,17 +255,17 @@ export default function JobIntelligenceView({
         </div>
       </div>
 
-      {/* Block Reasons */}
+      {/* Warning: Minimum Requirements Not Met */}
       {job.isBlocked && job.blockReasons.length > 0 && (
-        <div className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-xl p-4">
-          <h3 className="font-medium text-error-800 dark:text-error-200 mb-2 flex items-center gap-2">
-            <Shield className="w-5 h-5" />
-            This job is blocked
+        <div className="bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-xl p-4">
+          <h3 className="font-medium text-warning-800 dark:text-warning-200 mb-2 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5" />
+            This job doesn&apos;t match your minimum requirements
           </h3>
           <ul className="space-y-1">
             {job.blockReasons.map((reason, index) => (
-              <li key={index} className="text-sm text-error-700 dark:text-error-300 flex items-start gap-2">
-                <span className="text-error-500 mt-0.5">•</span>
+              <li key={index} className="text-sm text-warning-700 dark:text-warning-300 flex items-start gap-2">
+                <span className="text-warning-500 mt-0.5">•</span>
                 {reason}
               </li>
             ))}

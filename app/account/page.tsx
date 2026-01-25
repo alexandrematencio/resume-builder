@@ -11,7 +11,7 @@ import {
   Award,
   Globe,
   Link as LinkIcon,
-  Target,
+  Layers,
   Sliders,
   Loader2,
   Check,
@@ -61,7 +61,7 @@ const tabs: Tab[] = [
   { id: 'certifications', label: 'Certifications', icon: <Award className="w-4 h-4" />, section: 'extended' },
   { id: 'languages', label: 'Languages', icon: <Globe className="w-4 h-4" />, section: 'extended' },
   { id: 'links', label: 'Links', icon: <LinkIcon className="w-4 h-4" />, section: 'extended' },
-  { id: 'roles', label: 'Role Profiles', icon: <Target className="w-4 h-4" />, section: 'roles' },
+  { id: 'roles', label: 'Role Profiles', icon: <Layers className="w-4 h-4" />, section: 'roles' },
   { id: 'job-prefs', label: 'Job Preferences', icon: <Sliders className="w-4 h-4" />, section: 'jobs' },
 ];
 

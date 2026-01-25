@@ -141,9 +141,9 @@ export default function JobImportModal({ isOpen, onClose, onJobImported, mode: i
           // Analysis failed, but job is saved - continue anyway
           console.error('Auto-analysis failed:', err);
         }
+        handleClose();
         onJobImported(savedJob);
         onSuccess?.(savedJob.id);
-        handleClose();
       } else {
         // User hasn't consented yet - show consent modal
         setPendingJobForAnalysis(savedJob);
@@ -169,9 +169,9 @@ export default function JobImportModal({ isOpen, onClose, onJobImported, mode: i
       } catch (err) {
         console.error('Auto-analysis failed:', err);
       }
+      handleClose();
       onJobImported(pendingJobForAnalysis);
       onSuccess?.(pendingJobForAnalysis.id);
-      handleClose();
     }
   };
 
@@ -180,9 +180,9 @@ export default function JobImportModal({ isOpen, onClose, onJobImported, mode: i
 
     // Job is already saved, just close without analysis
     if (pendingJobForAnalysis) {
+      handleClose();
       onJobImported(pendingJobForAnalysis);
       onSuccess?.(pendingJobForAnalysis.id);
-      handleClose();
     }
   };
 

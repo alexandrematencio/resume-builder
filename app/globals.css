@@ -277,7 +277,8 @@
 
   /* === MODAL === */
   .modal-backdrop {
-    @apply fixed inset-0;
+    @apply fixed inset-0 z-50;
+    @apply flex items-center justify-center;
     @apply bg-black/50 dark:bg-black/70;
     @apply backdrop-blur-sm;
   }
@@ -447,4 +448,19 @@ textarea:focus,
 select:focus {
   @apply outline-none ring-2 ring-accent-500 ring-offset-2;
   @apply dark:ring-offset-primary-900;
+}
+
+/* === REDUCED MOTION === */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

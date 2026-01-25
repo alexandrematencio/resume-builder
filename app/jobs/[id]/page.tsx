@@ -8,7 +8,7 @@ import { useJobIntelligence, JobIntelligenceProvider } from '@/app/contexts/JobI
 import { ThemeToggle } from '@/app/components/ThemeToggle';
 import JobIntelligenceView from '@/app/components/jobs/JobIntelligenceView';
 import NewApplicationModal from '@/app/components/NewApplicationModal';
-import { Briefcase, User, LogOut, ChevronDown } from 'lucide-react';
+import { Target, User, LogOut, ChevronDown } from 'lucide-react';
 import type { JobOffer, Application, CVVersion, ApplicationStatus, ParsedJobContext } from '@/app/types';
 import { recalculateWithDismissals } from '@/lib/job-filter-service';
 import { loadApplications, saveAllApplications } from '@/lib/supabase-db';
@@ -96,8 +96,8 @@ function JobDetailContent() {
                     onClick={() => router.push('/jobs')}
                     className="px-3 py-2 text-sm font-medium text-primary-900 dark:text-primary-50 bg-primary-100 dark:bg-primary-700 rounded-lg flex items-center gap-2"
                   >
-                    <Briefcase className="w-4 h-4" />
-                    Jobs
+                    <Target className="w-4 h-4" />
+                    Matching
                   </button>
                 </nav>
               </div>
@@ -119,7 +119,7 @@ function JobDetailContent() {
               onClick={() => router.push('/jobs')}
               className="inline-flex items-center gap-2 px-4 py-2 bg-accent-600 text-white rounded-lg text-sm font-medium hover:bg-accent-700 transition-colors"
             >
-              Back to Jobs
+              Back to Matching
             </button>
           </div>
         </main>
@@ -323,6 +323,11 @@ REQUIREMENTS:
     });
   };
 
+  const handleDismissWarning = async () => {
+    if (!job) return;
+    await modifyJobOffer(job.id, { isBlocked: false });
+  };
+
   return (
     <div className="min-h-screen bg-primary-50 dark:bg-primary-900 transition-colors">
       {/* Header */}
@@ -342,8 +347,8 @@ REQUIREMENTS:
                   onClick={() => router.push('/jobs')}
                   className="px-3 py-2 text-sm font-medium text-primary-900 dark:text-primary-50 bg-primary-100 dark:bg-primary-700 rounded-lg flex items-center gap-2"
                 >
-                  <Briefcase className="w-4 h-4" />
-                  Jobs
+                  <Target className="w-4 h-4" />
+                  Matching
                 </button>
               </nav>
             </div>
@@ -432,6 +437,7 @@ REQUIREMENTS:
           onApply={handleApply}
           onArchive={handleArchive}
           onDismissRedFlag={handleDismissRedFlag}
+          onDismissWarning={handleDismissWarning}
           analyzing={analyzing}
         />
       </main>

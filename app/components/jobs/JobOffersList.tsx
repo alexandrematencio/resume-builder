@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Search, Filter, SortAsc, SortDesc, Inbox } from 'lucide-react';
 import JobOfferCard from './JobOfferCard';
+import { SkeletonList } from '@/app/components/SkeletonCard';
 import type { JobOffer, JobOfferFilters, JobOfferStatus } from '@/app/types';
 
 interface JobOffersListProps {
@@ -13,6 +14,7 @@ interface JobOffersListProps {
   onAnalyze: (jobId: string) => Promise<void>;
   onSave: (jobId: string) => Promise<void>;
   onDismiss: (jobId: string) => Promise<void>;
+  onArchive?: (jobId: string) => Promise<void>;
   onApply?: (job: JobOffer) => void;
 }
 
@@ -33,6 +35,7 @@ export default function JobOffersList({
   onAnalyze,
   onSave,
   onDismiss,
+  onArchive,
   onApply,
 }: JobOffersListProps) {
   const [searchInput, setSearchInput] = useState(filters.search || '');
@@ -207,9 +210,7 @@ export default function JobOffersList({
 
       {/* Job Cards */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="spinner w-8 h-8"></div>
-        </div>
+        <SkeletonList variant="job" count={3} />
       ) : jobs.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <Inbox className="w-12 h-12 text-primary-300 dark:text-primary-600 mb-4" />
@@ -231,6 +232,7 @@ export default function JobOffersList({
               onAnalyze={handleAnalyze}
               onSave={onSave}
               onDismiss={onDismiss}
+              onArchive={onArchive}
               onApply={onApply}
               analyzing={analyzingId === job.id}
             />
