@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { PresenceType, SalaryRateType } from '@/app/types';
-import { ParseJobDescriptionSchema, createValidationErrorResponse, logAndGetSafeError } from '@/lib/validation-schemas';
+import { ParseJobDescriptionSchema, createValidationErrorResponse, logAndGetSafeError, extractJsonFromText } from '@/lib/validation-schemas';
+import { MAX_TOKENS } from '@/lib/constants';
+import { callAnthropic } from '@/lib/anthropic-client';
 
 interface ParsedJobData {
   title: string | null;
@@ -113,38 +115,15 @@ export async function POST(request: NextRequest): Promise<NextResponse<ParseJobR
     const { description } = validation.data;
     const prompt = getJobParsingPrompt(description);
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        messages: [{ role: 'user', content: prompt }],
-      }),
+    const responseText = await callAnthropic({
+      prompt,
+      maxTokens: MAX_TOKENS.JOB_PARSING,
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Anthropic API Error:', errorText);
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const responseText = data.content[0].text;
 
     // Parse the JSON response
     let parsed: ParsedJobData;
     try {
-      // Try to extract JSON from the response (in case there's extra text)
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON found in response');
-      }
-      parsed = JSON.parse(jsonMatch[0]);
+      parsed = extractJsonFromText<ParsedJobData>(responseText);
     } catch (parseError) {
       console.error('Failed to parse AI response:', responseText);
       return NextResponse.json(

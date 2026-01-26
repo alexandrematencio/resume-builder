@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import type { TextItem } from 'pdfjs-dist/types/src/display/api';
+import { FILE_SIZE_LIMITS } from '@/lib/constants';
 
 // Disable worker for server-side usage
 GlobalWorkerOptions.workerSrc = '';
@@ -29,9 +30,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check file size (8MB max)
-    if (file.size > 8 * 1024 * 1024) {
+    if (file.size > FILE_SIZE_LIMITS.PDF_MAX_BYTES) {
       return NextResponse.json(
-        { error: 'File too large. Maximum size is 8MB.' },
+        { error: `File too large. Maximum size is ${FILE_SIZE_LIMITS.PDF_MAX_MB}MB.` },
         { status: 400 }
       );
     }

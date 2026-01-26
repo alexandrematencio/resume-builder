@@ -15,7 +15,9 @@ import {
   getMissingSkills,
   type MatchData,
 } from '@/lib/job-filter-service';
-import { AnalyzeJobSchema, createValidationErrorResponse, logAndGetSafeError } from '@/lib/validation-schemas';
+import { AnalyzeJobSchema, createValidationErrorResponse, logAndGetSafeError, extractJsonFromText } from '@/lib/validation-schemas';
+import { MAX_TOKENS } from '@/lib/constants';
+import { callAnthropic } from '@/lib/anthropic-client';
 
 interface AnalyzeJobResponse {
   success: boolean;
@@ -139,36 +141,13 @@ async function generateAIInsights(
   const prompt = getAIInsightsPrompt(job, profile, matchData);
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1500,
-        messages: [{ role: 'user', content: prompt }],
-      }),
+    const responseText = await callAnthropic({
+      prompt,
+      maxTokens: MAX_TOKENS.JOB_INSIGHTS,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Anthropic API Error:', errorText);
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const responseText = data.content[0].text;
-
     // Parse the JSON response
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('No JSON found in response');
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]);
+    const parsed = extractJsonFromText<Record<string, unknown>>(responseText);
 
     // Validate and return
     return {

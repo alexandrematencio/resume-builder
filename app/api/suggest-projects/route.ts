@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SuggestProjectsSchema, createValidationErrorResponse, logAndGetSafeError } from '@/lib/validation-schemas';
+import { MAX_TOKENS } from '@/lib/constants';
+import { callAnthropic } from '@/lib/anthropic-client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -61,28 +63,10 @@ Focus on:
 
 Only output the project suggestions, nothing else. If there's not enough information, suggest generic but relevant project types for this role.`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 500,
-        messages: [{ role: 'user', content: prompt }],
-      }),
+    const suggestions = await callAnthropic({
+      prompt,
+      maxTokens: MAX_TOKENS.SUGGEST_PROJECTS,
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Anthropic API Error:', errorText);
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const suggestions = data.content[0].text;
 
     return NextResponse.json({
       success: true,

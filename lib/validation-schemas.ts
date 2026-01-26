@@ -26,11 +26,33 @@ export const GeneratePromptSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required').max(50000, 'Prompt too long'),
 });
 
-// Analyze Job - validate structure exists, TypeScript types handle the rest
+// Analyze Job - validate critical fields with .passthrough() for extra data
+const JobOfferSchema = z.object({
+  requiredSkills: z.array(z.string()).optional().default([]),
+  niceToHaveSkills: z.array(z.string()).optional().default([]),
+  salaryMin: z.number().nullable().optional(),
+  salaryMax: z.number().nullable().optional(),
+}).passthrough(); // Allow extra fields after validating criticals
+
+const PreferencesSchema = z.object({
+  minSalary: z.number().nullable().optional(),
+  weightSalary: z.number().min(0).max(100).optional(),
+  weightSkills: z.number().min(0).max(100).optional(),
+  weightLocation: z.number().min(0).max(100).optional(),
+  weightRemote: z.number().min(0).max(100).optional(),
+  weightPerks: z.number().min(0).max(100).optional(),
+}).passthrough(); // Allow extra fields after validating weights
+
+const UserProfileSchema = z.object({
+  skills: z.array(z.object({
+    name: z.string(),
+  }).passthrough()).optional(),
+}).passthrough(); // Allow extra profile fields
+
 export const AnalyzeJobSchema = z.object({
-  jobOffer: z.object({}).passthrough(),
-  preferences: z.object({}).passthrough(),
-  userProfile: z.object({}).passthrough(),
+  jobOffer: JobOfferSchema,
+  preferences: PreferencesSchema,
+  userProfile: UserProfileSchema,
 });
 
 // Suggest Projects
@@ -79,4 +101,16 @@ export function logAndGetSafeError(context: string, error: unknown, genericMessa
   }
   // Always return generic message to client
   return genericMessage;
+}
+
+/**
+ * Extracts JSON from AI response text (handles markdown code blocks)
+ * @throws Error if no JSON found in response
+ */
+export function extractJsonFromText<T = unknown>(text: string): T {
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('No JSON found in response');
+  }
+  return JSON.parse(jsonMatch[0]) as T;
 }
