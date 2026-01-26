@@ -7,6 +7,17 @@ import type {
   UserProfile,
   WorkExperience,
 } from '@/app/types';
+import {
+  splitCompoundSkill,
+  buildProfileTexts,
+  checkSemanticSimilarity,
+  SKILL_EQUIVALENCES,
+} from './skill-matching-core';
+import {
+  MIN_SKILL_FRAGMENT_LENGTH,
+  MIN_EXPERIENCE_MATCH_LENGTH,
+  SKILL_MATCH_WEIGHTS,
+} from './constants';
 
 // ============================================
 // HARD BLOCKERS
@@ -117,33 +128,6 @@ export function applyHardBlockers(
 // SEMANTIC SCORING
 // ============================================
 
-// Split compound skills on separators: /, &, " et ", " and "
-function splitCompoundSkill(skill: string): string[] {
-  const parts = skill.split(/[\/&]|\s+et\s+|\s+and\s+/gi)
-    .map(s => s.trim().toLowerCase())
-    .filter(s => s.length > 0);
-  // Always include the original for exact matching
-  const original = skill.toLowerCase();
-  if (parts.length <= 1) return [original];
-  return [original, ...parts];
-}
-
-// Build searchable texts from profile (skills + experience)
-function buildProfileTexts(
-  userSkills: Skill[],
-  workExperience?: WorkExperience[]
-): { skillNames: string[]; experienceTexts: string[] } {
-  const skillNames = userSkills.map((s) => s.name.toLowerCase());
-  const experienceTexts: string[] = [];
-  for (const exp of workExperience || []) {
-    if (exp.title) experienceTexts.push(exp.title.toLowerCase());
-    for (const achievement of exp.achievements || []) {
-      experienceTexts.push(achievement.toLowerCase());
-    }
-  }
-  return { skillNames, experienceTexts };
-}
-
 export function calculateSkillsMatch(
   jobSkills: string[],
   userSkills: Skill[],
@@ -161,45 +145,45 @@ export function calculateSkillsMatch(
     let bestWeight = 0;
 
     for (const fragment of fragments) {
-      if (fragment.length < 2) continue;
+      if (fragment.length < MIN_SKILL_FRAGMENT_LENGTH) continue;
 
-      // 1. Exact match against skill names (100%)
+      // 1. Exact match against skill names
       if (skillNames.includes(fragment)) {
-        bestWeight = Math.max(bestWeight, 1.0);
+        bestWeight = Math.max(bestWeight, SKILL_MATCH_WEIGHTS.EXACT_MATCH);
         continue;
       }
 
-      // 2. Partial match against skill names (80%)
+      // 2. Partial match against skill names
       const partialSkillMatch = skillNames.some(
         (userSkill) =>
           userSkill.includes(fragment) ||
           fragment.includes(userSkill)
       );
       if (partialSkillMatch) {
-        bestWeight = Math.max(bestWeight, 0.8);
+        bestWeight = Math.max(bestWeight, SKILL_MATCH_WEIGHTS.PARTIAL_MATCH);
         continue;
       }
 
-      // 3. Semantic similarity against skill names (60%)
+      // 3. Semantic similarity against skill names
       if (checkSemanticSimilarity(fragment, skillNames)) {
-        bestWeight = Math.max(bestWeight, 0.6);
+        bestWeight = Math.max(bestWeight, SKILL_MATCH_WEIGHTS.SEMANTIC_MATCH);
         continue;
       }
 
-      // 4. Match against experience texts (50% - reduced weight for sentence matching)
-      if (fragment.length >= 4) {
+      // 4. Match against experience texts (reduced weight for sentence matching)
+      if (fragment.length >= MIN_EXPERIENCE_MATCH_LENGTH) {
         const expMatch = experienceTexts.some(
           (text) => text.includes(fragment)
         );
         if (expMatch) {
-          bestWeight = Math.max(bestWeight, 0.5);
+          bestWeight = Math.max(bestWeight, SKILL_MATCH_WEIGHTS.EXPERIENCE_MATCH);
           continue;
         }
       }
 
-      // 5. Semantic similarity against experience texts (40%)
+      // 5. Semantic similarity against experience texts
       if (checkSemanticSimilarity(fragment, experienceTexts)) {
-        bestWeight = Math.max(bestWeight, 0.4);
+        bestWeight = Math.max(bestWeight, SKILL_MATCH_WEIGHTS.EXPERIENCE_SEMANTIC);
       }
     }
 
@@ -207,57 +191,6 @@ export function calculateSkillsMatch(
   }
 
   return Math.round((matchCount / jobSkills.length) * 100);
-}
-
-// Semantic similarity check with cross-language equivalences
-function checkSemanticSimilarity(skill: string, texts: string[]): boolean {
-  const equivalences: Record<string, string[]> = {
-    // Tech
-    javascript: ['js', 'ecmascript', 'es6', 'es2015'],
-    typescript: ['ts'],
-    react: ['reactjs', 'react.js'],
-    vue: ['vuejs', 'vue.js'],
-    angular: ['angularjs', 'angular.js'],
-    node: ['nodejs', 'node.js'],
-    python: ['py'],
-    postgres: ['postgresql', 'psql'],
-    mongo: ['mongodb'],
-    aws: ['amazon web services'],
-    gcp: ['google cloud', 'google cloud platform'],
-    azure: ['microsoft azure'],
-    docker: ['containerization'],
-    kubernetes: ['k8s'],
-    ci: ['continuous integration'],
-    cd: ['continuous deployment', 'continuous delivery'],
-    agile: ['scrum', 'kanban'],
-    sql: ['mysql', 'postgresql', 'sqlite'],
-    // Hospitality / Service (FR ↔ EN)
-    barman: ['bartender', 'mixologue', 'mixologist', 'bar service', 'service au bar', 'service de bar'],
-    serveur: ['server', 'waiter', 'waitress', 'service en salle', 'table service'],
-    caisse: ['cashier', 'encaissement', 'cash handling', 'caissier', 'tenue de caisse'],
-    cocktails: ['mixologie', 'cocktail preparation', 'préparation de cocktails', 'préparation de boissons'],
-    accueil: ['reception', 'customer welcome', 'accueil des clients', 'greeting'],
-    vente: ['sales', 'selling', 'commercial'],
-    cuisine: ['cooking', 'chef', 'cuisinier', 'préparation culinaire'],
-    nettoyage: ['cleaning', 'entretien', 'housekeeping', 'hygiène'],
-    commande: ['order', 'prise de commande', 'order taking', 'préparation de commande'],
-    stock: ['inventory', 'gestion des stocks', 'stock management', 'approvisionnement'],
-    // General (FR ↔ EN)
-    management: ['gestion', 'encadrement', 'supervision', 'responsable'],
-    communication: ['relation client', 'customer relations', 'interpersonal'],
-    teamwork: ['travail en équipe', 'esprit d\'équipe', 'team spirit', 'collaboration'],
-  };
-
-  for (const [key, aliases] of Object.entries(equivalences)) {
-    const allTerms = [key, ...aliases];
-    if (allTerms.some(term => skill.includes(term) || term.includes(skill))) {
-      return texts.some((text) =>
-        allTerms.some((term) => text.includes(term))
-      );
-    }
-  }
-
-  return false;
 }
 
 export function calculatePerksMatch(
