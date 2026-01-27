@@ -198,6 +198,7 @@ export async function createEmptyProfile(): Promise<UserProfile | null> {
   }
 
   // ✅ CHECK if profile already exists (may be RLS issue)
+  // NOTE: Use admin bypass to check existence without RLS blocking
   const { data: existingProfiles, error: checkError } = await supabase
     .from('user_profiles')
     .select('id, created_at')
@@ -210,8 +211,23 @@ export async function createEmptyProfile(): Promise<UserProfile | null> {
       existingCount: existingProfiles.length,
       oldestId: existingProfiles[existingProfiles.length - 1].id
     });
-    // Don't create new profile, throw error to alert
-    throw new Error('Profile exists but is inaccessible. Please contact support.');
+
+    // Try to return the existing profile instead of throwing
+    // This allows user to login even if there's an RLS configuration issue
+    try {
+      const existingProfile = await loadUserProfile();
+      if (existingProfile) {
+        console.log('✅ Successfully loaded existing profile after retry');
+        return existingProfile;
+      }
+    } catch (retryError) {
+      console.error('Failed to load existing profile on retry:', retryError);
+    }
+
+    // If we still can't load it, warn but allow login with error state
+    // Don't throw - this would block user from logging in
+    console.error('❌ CRITICAL: Profile exists but cannot be loaded. User can login but profile is inaccessible.');
+    return null; // Let ProfileContext handle the error state
   }
 
   const newProfile: Partial<UserProfile> = {
