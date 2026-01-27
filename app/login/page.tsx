@@ -25,8 +25,12 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push('/');
+      // CRITICAL: Refresh FIRST to sync server-side session, then navigate
       router.refresh();
+      // Small delay to ensure server sees the session
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
     }
   };
 
