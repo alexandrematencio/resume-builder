@@ -25,12 +25,9 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      // CRITICAL: Refresh FIRST to sync server-side session, then navigate
-      router.refresh();
-      // Small delay to ensure server sees the session
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
+      // Session now stored in cookies automatically by @supabase/ssr
+      // Full page reload to ensure middleware sees updated cookies
+      window.location.href = '/';
     }
   };
 
