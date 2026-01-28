@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -15,7 +17,18 @@ import {
   Clock
 } from 'lucide-react';
 
-export default function LandingPage() {
+function LandingPageContent() {
+  const searchParams = useSearchParams();
+  const [showDeletedMessage, setShowDeletedMessage] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('deleted') === 'true') {
+      setShowDeletedMessage(true);
+      // Auto-hide after 10 seconds
+      setTimeout(() => setShowDeletedMessage(false), 10000);
+    }
+  }, [searchParams]);
+
   return (
     <div className="min-h-screen bg-primary-50 dark:bg-primary-950">
       {/* Header */}
@@ -52,6 +65,20 @@ export default function LandingPage() {
           </div>
         </div>
       </header>
+
+      {/* Account Deleted Success Message */}
+      {showDeletedMessage && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
+          <div className="bg-white dark:bg-primary-800 border border-primary-200 dark:border-primary-700 rounded-lg shadow-lg p-4">
+            <p className="font-medium text-primary-900 dark:text-primary-50">
+              Account deleted successfully.
+            </p>
+            <p className="text-sm text-primary-600 dark:text-primary-400 mt-1">
+              We're sorry to see you go. You can create a new account anytime.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6">
@@ -444,5 +471,14 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+// Wrap with Suspense for useSearchParams
+export default function LandingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-primary-50 dark:bg-primary-950" />}>
+      <LandingPageContent />
+    </Suspense>
   );
 }

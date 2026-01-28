@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { X, Shield, ExternalLink } from 'lucide-react';
 
 interface AIConsentModalProps {
@@ -66,7 +67,10 @@ export default function AIConsentModal({ isOpen, onAccept, onDecline }: AIConsen
           </div>
 
           <p className="text-xs text-primary-500 dark:text-primary-500">
-            You can withdraw consent at any time in your Account settings.
+            You can withdraw consent at any time in{' '}
+            <Link href="/account?tab=account-settings" className="text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 underline">
+              Account Settings
+            </Link>.
           </p>
         </div>
 

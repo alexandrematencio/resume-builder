@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft,
   User,
@@ -13,6 +13,7 @@ import {
   Link as LinkIcon,
   Layers,
   Sliders,
+  Settings,
   Loader2,
   Check,
   X,
@@ -33,6 +34,7 @@ import LanguagesForm from '@/app/components/account/LanguagesForm';
 import LinksForm from '@/app/components/account/LinksForm';
 import RoleProfilesTab from '@/app/components/account/RoleProfilesTab';
 import JobPreferencesForm from '@/app/components/jobs/JobPreferencesForm';
+import AccountSettingsTab from './AccountSettingsTab';
 import { JobIntelligenceProvider } from '@/app/contexts/JobIntelligenceContext';
 
 type TabId =
@@ -44,13 +46,14 @@ type TabId =
   | 'languages'
   | 'links'
   | 'roles'
-  | 'job-prefs';
+  | 'job-prefs'
+  | 'account-settings';
 
 interface Tab {
   id: TabId;
   label: string;
   icon: React.ReactNode;
-  section: 'profile' | 'extended' | 'roles' | 'jobs';
+  section: 'profile' | 'extended' | 'roles' | 'jobs' | 'settings';
 }
 
 const tabs: Tab[] = [
@@ -63,15 +66,25 @@ const tabs: Tab[] = [
   { id: 'links', label: 'Links', icon: <LinkIcon className="w-4 h-4" />, section: 'extended' },
   { id: 'roles', label: 'Role Profiles', icon: <Layers className="w-4 h-4" />, section: 'roles' },
   { id: 'job-prefs', label: 'Job Preferences', icon: <Sliders className="w-4 h-4" />, section: 'jobs' },
+  { id: 'account-settings', label: 'Account & Privacy', icon: <Settings className="w-4 h-4" />, section: 'settings' },
 ];
 
 function AccountPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const { profile, profileLoading, isComplete, missingFields } = useProfile();
   const [activeTab, setActiveTab] = useState<TabId>('core');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+
+  // Handle tab query parameter for deep linking
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && tabs.some(t => t.id === tabParam)) {
+      setActiveTab(tabParam as TabId);
+    }
+  }, [searchParams]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -367,6 +380,8 @@ function AccountPageContent() {
             onSaveError={handleSaveError}
           />
         );
+      case 'account-settings':
+        return <AccountSettingsTab />;
       default:
         return null;
     }
@@ -515,6 +530,24 @@ function AccountPageContent() {
                     <span className="text-sm font-medium">{tab.label}</span>
                   </button>
                 ))}
+
+                <p className="text-xs font-medium text-primary-500 dark:text-primary-400 uppercase tracking-wider mt-4 mb-2 px-3">
+                  Settings
+                </p>
+                {tabs.filter(t => t.section === 'settings').map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                      activeTab === tab.id
+                        ? 'bg-accent-600 text-white'
+                        : 'text-primary-600 dark:text-primary-300 hover:text-primary-900 dark:hover:text-primary-100 hover:bg-primary-100 dark:hover:bg-primary-700'
+                    }`}
+                  >
+                    <span aria-hidden="true">{tab.icon}</span>
+                    <span className="text-sm font-medium">{tab.label}</span>
+                  </button>
+                ))}
               </nav>
 
               {/* Download Button */}
@@ -560,11 +593,17 @@ function AccountPageContent() {
   );
 }
 
-// Wrap with provider
+// Wrap with provider and Suspense
 export default function AccountPage() {
   return (
     <JobIntelligenceProvider>
-      <AccountPageContent />
+      <Suspense fallback={
+        <div className="min-h-screen bg-primary-50 dark:bg-primary-900 flex items-center justify-center transition-colors">
+          <div className="spinner w-12 h-12"></div>
+        </div>
+      }>
+        <AccountPageContent />
+      </Suspense>
     </JobIntelligenceProvider>
   );
 }
