@@ -14,8 +14,23 @@ import type {
 // Get current user ID helper
 async function getCurrentUserId(): Promise<string | null> {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id ?? null;
+  const { data: { user }, error } = await supabase.auth.getUser();
+
+  if (error) {
+    console.error('[job-intelligence-db] Auth error:', {
+      code: error.code,
+      message: error.message,
+      status: error.status,
+    });
+    return null;
+  }
+
+  if (!user) {
+    console.warn('[job-intelligence-db] No authenticated user found');
+    return null;
+  }
+
+  return user.id;
 }
 
 // ============================================
@@ -42,7 +57,12 @@ export async function loadJobPreferences(): Promise<JobPreferences | null> {
       // No preferences exist yet
       return null;
     }
-    console.error('Error loading job preferences:', error);
+    console.error('Error loading job preferences:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
     return null;
   }
 
@@ -197,7 +217,12 @@ export async function loadJobOffers(filters?: JobOfferFilters): Promise<JobOffer
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error loading job offers:', error);
+    console.error('Error loading job offers:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
     return [];
   }
 

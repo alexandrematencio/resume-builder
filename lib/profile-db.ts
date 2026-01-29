@@ -17,8 +17,23 @@ import type {
 // Get current user ID helper
 async function getCurrentUserId(): Promise<string | null> {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id ?? null;
+  const { data: { user }, error } = await supabase.auth.getUser();
+
+  if (error) {
+    console.error('[profile-db] Auth error:', {
+      code: error.code,
+      message: error.message,
+      status: error.status,
+    });
+    return null;
+  }
+
+  if (!user) {
+    console.warn('[profile-db] No authenticated user found');
+    return null;
+  }
+
+  return user.id;
 }
 
 // ============================================
