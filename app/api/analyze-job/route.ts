@@ -30,7 +30,8 @@ function getAIInsightsPrompt(
   profile: UserProfile,
   matchData: MatchData
 ): string {
-  const jobSkills = [...(job.requiredSkills || []), ...(job.niceToHaveSkills || [])];
+  // Deduplicate job skills to prevent counting the same skill twice
+  const jobSkills = [...new Set([...(job.requiredSkills || []), ...(job.niceToHaveSkills || [])])];
   const userSkillNames = profile.skills.map(s => s.name);
 
   return `You are a career advisor analyzing a job opportunity for a candidate. Provide personalized insights based on the analysis below.
@@ -234,7 +235,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalyzeJo
     const blockerResult = applyHardBlockers(jobOffer, preferences);
 
     // Step 2: Calculate skills match
-    const jobSkills = [...(jobOffer.requiredSkills || []), ...(jobOffer.niceToHaveSkills || [])];
+    // Deduplicate job skills to prevent counting the same skill twice
+    const jobSkills = [...new Set([...(jobOffer.requiredSkills || []), ...(jobOffer.niceToHaveSkills || [])])];
     const skillsMatchPercent = calculateSkillsMatch(jobSkills, userProfile.skills, userProfile.workExperience);
 
     // Step 3: Calculate perks match

@@ -19,6 +19,7 @@ import {
   deleteJobOffer,
   getJobOffersStats,
 } from '@/lib/job-intelligence-db';
+import { logError } from '@/lib/error-utils';
 import { useAuth } from './AuthContext';
 import { useProfile } from './ProfileContext';
 
@@ -119,7 +120,7 @@ export function JobIntelligenceProvider({ children }: { children: ReactNode }) {
 
       setPreferences(loadedPrefs);
     } catch (error) {
-      console.error('Error loading job preferences:', error);
+      logError('Error loading job preferences', error);
     } finally {
       setPreferencesLoading(false);
     }
@@ -160,7 +161,7 @@ export function JobIntelligenceProvider({ children }: { children: ReactNode }) {
         saved,
       });
     } catch (error) {
-      console.error('Error loading job offers:', error);
+      logError('Error loading job offers', error);
     } finally {
       setJobOffersLoading(false);
     }
@@ -189,7 +190,7 @@ export function JobIntelligenceProvider({ children }: { children: ReactNode }) {
         saved: prev.saved,
       }));
     } catch (error) {
-      console.error('Error loading stats:', error);
+      logError('Error loading stats', error);
     }
   }, [user]);
 
@@ -375,9 +376,9 @@ export function JobIntelligenceProvider({ children }: { children: ReactNode }) {
       setAnalyzing(false);
       return result.result;
     } catch (error) {
-      console.error('Error analyzing job offer:', error);
+      logError('Error analyzing job offer', error);
       setAnalyzing(false);
-      return null;
+      throw error; // Re-throw to trigger UI error state
     }
   };
 

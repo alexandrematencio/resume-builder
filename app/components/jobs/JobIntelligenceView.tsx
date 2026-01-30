@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Building2,
@@ -55,6 +56,11 @@ export default function JobIntelligenceView({
   const [showFullDescription, setShowFullDescription] = useState(false);
   const { profile } = useProfile();
   const { preferences } = useJobIntelligence();
+  const router = useRouter();
+
+  const goToPreferences = () => {
+    router.push('/jobs?tab=preferences');
+  };
 
   // Use server-provided matchedSkills and missingSkills (from job-filter-service.ts)
   // which includes compound skill splitting, semantic matching, and cross-language equivalences
@@ -524,7 +530,18 @@ export default function JobIntelligenceView({
             {/* Row 3: User's Unmatched Perks */}
             <div>
               <p className="text-xs text-primary-500 dark:text-primary-400 mb-1.5">Your Preferences Not Matched</p>
-              {unmatchedUserPerks.length > 0 ? (
+              {userPreferredPerks.length === 0 ? (
+                <p className="text-xs text-primary-400 dark:text-primary-500">
+                  No perk preferences set.{' '}
+                  <button
+                    onClick={goToPreferences}
+                    className="text-accent-500 hover:text-accent-600 dark:hover:text-accent-400 underline transition-colors"
+                  >
+                    Set your preferences
+                  </button>
+                  {' '}to see matches.
+                </p>
+              ) : unmatchedUserPerks.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
                   {unmatchedUserPerks.map((perk, index) => (
                     <span key={index} className="px-2 py-0.5 bg-primary-50 dark:bg-primary-800/50 text-primary-500 dark:text-primary-400 rounded text-xs font-medium">

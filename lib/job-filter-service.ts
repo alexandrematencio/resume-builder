@@ -377,12 +377,56 @@ export interface MatchData {
 
 export function getMatchedSkills(jobSkills: string[], userSkills: Skill[], workExperience?: WorkExperience[]): string[] {
   const { skillNames, experienceTexts } = buildProfileTexts(userSkills, workExperience);
-  const allTexts = [...skillNames, ...experienceTexts];
-  return jobSkills.filter((skill) => {
-    const fragments = splitCompoundSkill(skill);
-    return fragments.some(fragment =>
-      fragment.length >= 2 && allTexts.some(text => text.includes(fragment) || fragment.includes(text))
-    );
+
+  return jobSkills.filter((jobSkill) => {
+    const fragments = splitCompoundSkill(jobSkill);
+    let bestWeight = 0;
+
+    for (const fragment of fragments) {
+      if (fragment.length < MIN_SKILL_FRAGMENT_LENGTH) continue;
+
+      // 1. Exact match against skill names
+      if (skillNames.includes(fragment)) {
+        bestWeight = Math.max(bestWeight, SKILL_MATCH_WEIGHTS.EXACT_MATCH);
+        continue;
+      }
+
+      // 2. Partial match against skill names
+      const partialSkillMatch = skillNames.some(
+        (userSkill) =>
+          userSkill.includes(fragment) ||
+          fragment.includes(userSkill)
+      );
+      if (partialSkillMatch) {
+        bestWeight = Math.max(bestWeight, SKILL_MATCH_WEIGHTS.PARTIAL_MATCH);
+        continue;
+      }
+
+      // 3. Semantic similarity against skill names
+      if (checkSemanticSimilarity(fragment, skillNames)) {
+        bestWeight = Math.max(bestWeight, SKILL_MATCH_WEIGHTS.SEMANTIC_MATCH);
+        continue;
+      }
+
+      // 4. Match against experience texts
+      if (fragment.length >= MIN_EXPERIENCE_MATCH_LENGTH) {
+        const expMatch = experienceTexts.some(
+          (text) => text.includes(fragment)
+        );
+        if (expMatch) {
+          bestWeight = Math.max(bestWeight, SKILL_MATCH_WEIGHTS.EXPERIENCE_MATCH);
+          continue;
+        }
+      }
+
+      // 5. Semantic similarity against experience texts
+      if (checkSemanticSimilarity(fragment, experienceTexts)) {
+        bestWeight = Math.max(bestWeight, SKILL_MATCH_WEIGHTS.EXPERIENCE_SEMANTIC);
+      }
+    }
+
+    // Include skill if it matched at any tier (weight > 0)
+    return bestWeight > 0;
   });
 }
 

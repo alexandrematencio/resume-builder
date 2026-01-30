@@ -13,6 +13,7 @@ import {
   isProfileComplete,
   getMissingProfileFields,
 } from '@/lib/profile-db';
+import { logError } from '@/lib/error-utils';
 import { useAuth } from './AuthContext';
 
 interface ProfileContextType {
@@ -109,6 +110,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const loadedRoles = await loadRoleProfiles();
       setRoleProfiles(loadedRoles);
     } catch (error) {
+      logError('Error loading role profiles', error);
       // Don't clear role profiles on error - keep old state
     } finally {
       setRoleProfilesLoading(false);
